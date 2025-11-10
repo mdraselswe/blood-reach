@@ -1,0 +1,195 @@
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { supabaseServerClient } from '@/lib/supabase-server';
+import { DonorResults } from '@/app/(public)/donors/results';
+import { DonorSearchForm } from '@/app/(public)/donors/search-form';
+import type { Database } from '@/types/database';
+
+export const dynamic = 'force-dynamic';
+
+const DEFAULT_AREA_OPTIONS: Record<string, string[]> = {
+  ঢাকা: [
+    'মিরপুর',
+    'ধানমন্ডি',
+    'গুলশান',
+    'উত্তরা',
+    'মোহাম্মদপুর',
+    'মতিঝিল',
+    'বনানী',
+    'বাড্ডা',
+    'জাত্রাবাড়ী',
+    'খিলগাঁও',
+    'শাহজাহানপুর',
+    'পল্টন',
+    'কাফরুল',
+    'শ্যামলী',
+  ],
+  গাজীপুর: ['জয়দেবপুর', 'কালিয়াকৈর', 'কাপাসিয়া'],
+  নারায়ণগঞ্জ: ['ফতুল্লা', 'সিদ্ধিরগঞ্জ', 'রূপগঞ্জ'],
+  কিশোরগঞ্জ: ['কিশোরগঞ্জ সদর', 'ভৈরব', 'হোসেনপুর'],
+  টাঙ্গাইল: ['টাঙ্গাইল সদর', 'মির্জাপুর', 'ঘাটাইল'],
+  ফরিদপুর: ['ফরিদপুর সদর', 'আলফাডাঙ্গা', 'নগরকান্দা'],
+  চট্টগ্রাম: ['আগ্রাবাদ', 'হালিশহর', 'পতেঙ্গা', 'সীতাকুণ্ড', 'কর্ণফুলী'],
+  কক্সবাজার: ['কক্সবাজার সদর', 'টেকনাফ', 'উখিয়া', 'চকরিয়া'],
+  সিলেট: ['জিন্দাবাজার', 'চৌহাট্টা', 'আম্বরখানা', 'কুমারপাড়া'],
+  খুলনা: ['সোনাডাঙ্গা', 'খালিশপুর', 'দৌলতপুর', 'তেরখাদা'],
+  যশোর: ['যশোর সদর', 'বেনাপোল', 'কেশবপুর'],
+  রাজশাহী: ['সাহেববাজার', 'মতিহার', 'পবা', 'বাগমারা'],
+  বগুড়া: ['শেরপুর', 'সারিয়াকান্দি', 'নন্দীগ্রাম'],
+  রংপুর: ['ধাপ', 'তাজহাট', 'লালমনিরহাট'],
+  বরিশাল: ['রূপাতলী', 'চরমোনাই', 'নতুনবাজার'],
+  নোয়াখালী: ['নোয়াখালী সদর', 'বেগমগঞ্জ', 'কোম্পানীগঞ্জ'],
+  কুমিল্লা: ['কুমিল্লা সদর', 'দাউদকান্দি', 'চৌদ্দগ্রাম'],
+  ময়মনসিংহ: ['ময়মনসিংহ সদর', 'ত্রিশাল', 'ফুলবাড়িয়া'],
+  দিনাজপুর: ['দিনাজপুর সদর', 'পার্বতীপুর', 'বিরল'],
+  পাবনা: ['পাবনা সদর', 'ঈশ্বরদী', 'সুজানগর'],
+  মাদারীপুর: ['মাদারীপুর সদর', 'শিবচর', 'কালকিনি'],
+};
+
+const DEFAULT_PAGE_SIZE = 12;
+const MAX_PAGE_SIZE = 48;
+
+const getSingleValue = (searchParams: Record<string, string | string[] | undefined>, key: string) => {
+  const value = searchParams[key];
+  if (value === undefined) return undefined;
+  return Array.isArray(value) ? value[0] : value;
+};
+
+async function fetchFilterData() {
+  const supabase = supabaseServerClient();
+
+  const [areasRes, donorsCountRes, donorDistrictRes] = await Promise.all([
+    supabase
+      .from('area_lookup')
+      .select('district, area')
+      .eq('is_active', true)
+      .order('district', { ascending: true })
+      .order('area', { ascending: true }),
+    supabase
+      .from('donors')
+      .select('id', { count: 'exact', head: true })
+      .eq('availability', 'available'),
+    supabase
+      .from('donors')
+      .select('district, area', { head: false })
+      .eq('availability', 'available'),
+  ]);
+
+  if (areasRes.error) {
+    console.error('Failed to load area lookup', areasRes.error);
+  }
+  if (donorsCountRes.error) {
+    console.error('Failed to count donors', donorsCountRes.error);
+  }
+  if (donorDistrictRes.error) {
+    console.error('Failed to load donor districts', donorDistrictRes.error);
+  }
+
+  const mergedLookup: Record<string, Set<string>> = {};
+
+  const addArea = (district?: string | null, area?: string | null) => {
+    if (!district) return;
+    if (!mergedLookup[district]) mergedLookup[district] = new Set<string>();
+    if (area) mergedLookup[district]!.add(area);
+  };
+
+  Object.entries(DEFAULT_AREA_OPTIONS).forEach(([district, areas]) => {
+    if (!mergedLookup[district]) mergedLookup[district] = new Set<string>();
+    areas.forEach((area) => mergedLookup[district]!.add(area));
+  });
+
+  (areasRes.data ?? []).forEach((item) => {
+    addArea(item.district, item.area);
+  });
+
+  (donorDistrictRes.data ?? []).forEach((item) => {
+    addArea(item.district, item.area);
+  });
+
+  const areaLookup = Object.entries(mergedLookup).reduce<Record<string, string[]>>((acc, [district, areas]) => {
+    acc[district] = Array.from(areas).sort();
+    return acc;
+  }, {});
+
+  const availableCount = donorsCountRes.count ?? 0;
+
+  return { areaLookup, availableCount };
+}
+
+function parseSearchParams(searchParams: Record<string, string | string[] | undefined>) {
+  const getSingle = (key: string) => getSingleValue(searchParams, key);
+
+  const q = getSingle('q');
+  const group = getSingle('group');
+  const district = getSingle('district');
+  const area = getSingle('area');
+  const availability = getSingle('availability');
+
+  const validGroups: Database['public']['Enums']['blood_group'][] = [
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'AB+',
+    'AB-',
+    'O+',
+    'O-',
+  ];
+
+  return {
+    query: q?.slice(0, 80),
+    bloodGroup: validGroups.includes(group as any) ? (group as Database['public']['Enums']['blood_group']) : undefined,
+    district: district?.slice(0, 80),
+    area: area?.slice(0, 80),
+    availability:
+      availability === 'available' || availability === 'temporarily_unavailable'
+        ? availability
+        : undefined,
+  } as const;
+}
+
+export default async function DonorsPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const filters = parseSearchParams(searchParams);
+  const page = (() => {
+    const raw = getSingleValue(searchParams, 'page');
+    const parsed = Number.parseInt(raw ?? '', 10);
+    if (Number.isNaN(parsed) || parsed < 1) return 1;
+    return Math.min(parsed, 10_000);
+  })();
+  const pageSize = (() => {
+    const raw = getSingleValue(searchParams, 'pageSize');
+    const parsed = Number.parseInt(raw ?? '', 10);
+    if (Number.isNaN(parsed)) return DEFAULT_PAGE_SIZE;
+    if (parsed < 6) return 6;
+    if (parsed > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
+    return parsed;
+  })();
+  const { areaLookup, availableCount } = await fetchFilterData();
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-16">
+      <div className="flex flex-col gap-3 pb-10">
+        <Link href="/" className="text-sm font-semibold text-primary-600 hover:underline">
+          ← হোমে ফিরে যান
+        </Link>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-slate-900">ডোনার ডিরেক্টরি</h1>
+          <p className="text-sm text-slate-600 sm:text-base">
+            বর্তমানে <span className="font-semibold text-primary-600">{availableCount}</span> জন ডোনার সক্রিয়। আপনার প্রয়োজন অনুসারে ফিল্টার করে দ্রুত যোগাযোগ করুন।
+          </p>
+        </div>
+      </div>
+      <div className="grid gap-12 lg:grid-cols-[320px_1fr]">
+        <DonorSearchForm filters={filters} areaLookup={areaLookup} />
+        <Suspense fallback={<p className="text-sm text-slate-500">ডোনার তালিকা লোড হচ্ছে…</p>}>
+          {/* @ts-expect-error Async Server Component */}
+          <DonorResults filters={filters} page={page} pageSize={pageSize} />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
