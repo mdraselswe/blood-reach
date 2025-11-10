@@ -1,3 +1,4 @@
+import type { Database } from '@/types/database';
 import { supabaseAdminClient } from '@/lib/supabase-admin';
 import { DonorAdminTable } from '@/components/admin/donor-admin-table';
 
@@ -28,6 +29,8 @@ const sanitizeSearchTerm = (input: string | undefined) => {
   if (!trimmed) return undefined;
   return trimmed.replace(/[%_]/g, '').replace(/[(),|]/g, ' ').slice(0, 120);
 };
+
+type DonorRow = Database['public']['Tables']['donors']['Row'];
 
 export default async function AdminDonorsPage({
   searchParams,
@@ -74,14 +77,14 @@ export default async function AdminDonorsPage({
 
   const totalCount = count ?? 0;
   const effectivePage = totalCount === 0 ? 1 : Math.min(page, Math.max(1, Math.ceil(totalCount / pageSize)));
-  let donors = data ?? [];
+  let donors: DonorRow[] = (data ?? []) as DonorRow[];
   let finalError = error;
 
   if (totalCount > 0 && donors.length === 0 && effectivePage !== page) {
     const correctedFrom = (effectivePage - 1) * pageSize;
     const correctedTo = correctedFrom + pageSize - 1;
     const { data: correctedData, error: correctedError } = await buildQuery(false).range(correctedFrom, correctedTo);
-    donors = correctedData ?? donors;
+    donors = (correctedData ?? donors) as DonorRow[];
     finalError = correctedError ?? finalError;
   }
 

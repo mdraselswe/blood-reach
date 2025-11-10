@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { useMemo, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,8 @@ export function DonorPaginationControls({
   const goToPage = (nextPage: number) => {
     const safePage = Math.min(Math.max(nextPage, 1), totalPages);
     startTransition(() => {
-      router.push(buildUrl(safePage), { scroll: true });
+      const targetUrl = buildUrl(safePage) as Route;
+      router.push(targetUrl, { scroll: true });
     });
   };
 

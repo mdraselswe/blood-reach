@@ -125,7 +125,7 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
   const area = getSingle('area');
   const availability = getSingle('availability');
 
-  const validGroups: Database['public']['Enums']['blood_group'][] = [
+  const VALID_BLOOD_GROUPS = [
     'A+',
     'A-',
     'B+',
@@ -134,11 +134,18 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
     'AB-',
     'O+',
     'O-',
-  ];
+  ] as const satisfies readonly Database['public']['Enums']['blood_group'][];
+
+  const isBloodGroup = (
+    value: string | undefined,
+  ): value is Database['public']['Enums']['blood_group'] => {
+    if (!value) return false;
+    return (VALID_BLOOD_GROUPS as readonly string[]).includes(value);
+  };
 
   return {
     query: q?.slice(0, 80),
-    bloodGroup: validGroups.includes(group as any) ? (group as Database['public']['Enums']['blood_group']) : undefined,
+    bloodGroup: isBloodGroup(group) ? group : undefined,
     district: district?.slice(0, 80),
     area: area?.slice(0, 80),
     availability:
@@ -186,7 +193,6 @@ export default async function DonorsPage({
       <div className="grid gap-12 lg:grid-cols-[320px_1fr]">
         <DonorSearchForm filters={filters} areaLookup={areaLookup} />
         <Suspense fallback={<p className="text-sm text-slate-500">ডোনার তালিকা লোড হচ্ছে…</p>}>
-          {/* @ts-expect-error Async Server Component */}
           <DonorResults filters={filters} page={page} pageSize={pageSize} />
         </Suspense>
       </div>

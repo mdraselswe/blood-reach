@@ -1,21 +1,23 @@
 'use client';
 
+import type { Database } from '@/types/database';
 import { useMemo, useState, useTransition } from 'react';
 import { supabaseBrowserClient } from '@/lib/supabase-browser';
 
-type DonorProfile = {
-  id: string;
-  display_name: string;
-  blood_group: string;
-  phone_primary: string;
-  district: string | null;
-  area: string | null;
-  last_donation_at: string | null;
-  donation_count: number | null;
-  emergency_ready: boolean | null;
-  share_contact: boolean | null;
-  note: string | null;
-};
+type DonorProfile = Pick<
+  Database['public']['Tables']['donors']['Row'],
+  | 'id'
+  | 'display_name'
+  | 'blood_group'
+  | 'phone_primary'
+  | 'district'
+  | 'area'
+  | 'last_donation_at'
+  | 'donation_count'
+  | 'emergency_ready'
+  | 'share_contact'
+  | 'about'
+>;
 
 type Props = {
   donor: DonorProfile;
@@ -64,14 +66,14 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       const donationCountRaw = formData.get('donation_count')?.toString() ?? '';
       const emergencyReady = formData.get('emergency_ready') === 'on';
       const shareContact = formData.get('share_contact') === 'on';
-      const note = formData.get('note')?.toString() ?? '';
+      const about = formData.get('about')?.toString() ?? '';
 
       const updates: Record<string, unknown> = {
         emergency_ready: emergencyReady,
         share_contact: shareContact,
       };
 
-      updates.about = note.trim().length ? note.trim() : null;
+      updates.about = about.trim().length ? about.trim() : null;
 
       let nextLastDonationAt: string | null = donor.last_donation_at;
       if (lastDonationAtRaw) {
@@ -115,7 +117,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
         onUpdated({
           emergency_ready: emergencyReady,
           share_contact: shareContact,
-          note: note.trim().length ? note.trim() : null,
+          about: about.trim().length ? about.trim() : null,
           last_donation_at: nextLastDonationAt,
           donation_count: nextDonationCount,
         });
@@ -192,14 +194,14 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       <label className="grid gap-2 text-sm">
         <span className="font-semibold text-slate-700">অতিরিক্ত নোট</span>
         <textarea
-          name="note"
+          name="about"
           rows={4}
-          defaultValue={donor.note ?? ''}
+          defaultValue={donor.about ?? ''}
           placeholder="রক্ত দেওয়ার সময়সূচি, স্বাস্থ্যগত নোট ইত্যাদি যোগ করুন"
           className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
-        {fieldErrors.note ? (
-          <p className="text-xs font-medium text-rose-600">{fieldErrors.note[0]}</p>
+        {fieldErrors.about ? (
+          <p className="text-xs font-medium text-rose-600">{fieldErrors.about[0]}</p>
         ) : null}
       </label>
 

@@ -17,7 +17,7 @@ const formSchema = z.object({
   district: z.string().min(2, 'জেলার নাম লিখুন'),
   area: z.string().min(2, 'এলাকার নাম লিখুন'),
   emergency_ready: z.boolean().optional(),
-  note: z.string().max(400, '৪০০ অক্ষরের বেশি লেখা যাবে না').optional(),
+  about: z.string().max(400, '৪০০ অক্ষরের বেশি লেখা যাবে না').optional(),
   last_donation_at: z
     .string()
     .optional()
@@ -276,17 +276,17 @@ export function DonorRegistrationForm({ areaOptions }: Props) {
       </div>
 
       <div className="grid gap-2 text-sm">
-        <label className="font-semibold text-slate-700" htmlFor="note">
+        <label className="font-semibold text-slate-700" htmlFor="about">
           অতিরিক্ত তথ্য (ঐচ্ছিক)
         </label>
         <textarea
-          id="note"
+          id="about"
           rows={4}
-          {...register('note')}
+          {...register('about')}
           className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
           placeholder="উপলভ্য সময়, পূর্ব অভিজ্ঞতা বা বিশেষ নোট লিখুন"
         />
-        <FormError error={errors.note?.message || serverErrors.note?.[0]} />
+        <FormError error={errors.about?.message || serverErrors.about?.[0]} />
       </div>
 
       {serverMessage ? (

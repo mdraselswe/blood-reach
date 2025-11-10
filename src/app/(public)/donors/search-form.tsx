@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { useMemo, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -54,7 +55,8 @@ export function DonorSearchForm({ filters, areaLookup }: { filters: Filters; are
 
     startTransition(() => {
       const queryString = params.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: true });
+      const targetUrl = (queryString ? `${pathname}?${queryString}` : pathname) as Route;
+      router.push(targetUrl, { scroll: true });
     });
   };
 
@@ -66,7 +68,7 @@ export function DonorSearchForm({ filters, areaLookup }: { filters: Filters; are
           type="button"
           onClick={() => {
             startTransition(() => {
-              router.push(pathname, { scroll: true });
+              router.push(pathname as Route, { scroll: true });
             });
           }}
           className="text-xs font-semibold text-primary-600 hover:underline"

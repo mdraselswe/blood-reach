@@ -366,8 +366,8 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: {};
-    Functions: {};
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Enums: {
       blood_group: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
       availability_status: 'available' | 'temporarily_unavailable' | 'not_available';
@@ -375,6 +375,6 @@ export type Database = {
       request_status: 'open' | 'matched' | 'fulfilled' | 'expired' | 'cancelled';
       reaction_type: 'heart' | 'support' | 'pray';
     };
-    CompositeTypes: {};
+    CompositeTypes: Record<string, never>;
   };
 };

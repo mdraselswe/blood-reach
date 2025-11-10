@@ -18,7 +18,7 @@ const donorSchema = z.object({
   area: z.string().min(2, 'এলাকার নাম লিখুন'),
   email: z.string().email('বৈধ ইমেল লিখুন').optional().or(z.literal('')),
   emergency_ready: z.boolean().optional(),
-  note: z.string().max(400).optional(),
+  about: z.string().max(400).optional(),
   last_donation_at: z
     .string()
     .optional()
@@ -44,7 +44,7 @@ export async function registerDonor(formData: FormData) {
     area: formData.get('area')?.toString().trim(),
     email: formData.get('email')?.toString().trim(),
     emergency_ready: formData.get('emergency_ready') === 'on',
-    note: formData.get('note')?.toString().trim(),
+    about: formData.get('about')?.toString().trim(),
     last_donation_at: formData.get('last_donation_at')?.toString(),
     donation_count: formData.get('donation_count')?.toString(),
   });
@@ -74,7 +74,7 @@ export async function registerDonor(formData: FormData) {
       area: payload.area,
       email: payload.email || null,
       emergency_ready: Boolean(payload.emergency_ready),
-      about: payload.note,
+      about: payload.about,
       share_contact: true,
       verified: false,
       tags: payload.emergency_ready ? ['emergency-ready'] : [],

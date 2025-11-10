@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Database } from '@/types/database';
@@ -68,10 +69,11 @@ export function DonorAdminTable({
     return adminEmails.includes(user.email.toLowerCase());
   }, [user?.email, adminEmails]);
 
-  const buildUrl = (update: (params: URLSearchParams) => void) => {
+  const buildUrl = (update: (params: URLSearchParams) => void): Route => {
     const current = new URLSearchParams(searchParams.toString());
     update(current);
-    return current.toString() ? `${pathname}?${current.toString()}` : pathname;
+    const next = current.toString() ? `${pathname}?${current.toString()}` : pathname;
+    return next as Route;
   };
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -147,7 +149,7 @@ export function DonorAdminTable({
   const handleToggleVerification = (donorId: string, nextValue: boolean) => {
     if (!user?.email) return;
     startTransition(async () => {
-      const result = await toggleVerification({ donorId, verify: nextValue, adminEmail: user.email });
+      const result = await toggleVerification({ donorId, verify: nextValue, adminEmail: user.email ?? null });
       setStatusMessage(result.message);
       if (result.success) {
         router.refresh();
@@ -158,7 +160,11 @@ export function DonorAdminTable({
   const handleToggleAvailability = (donorId: string, nextValue: Database['public']['Enums']['availability_status']) => {
     if (!user?.email) return;
     startTransition(async () => {
-      const result = await toggleAvailability({ donorId, availability: nextValue, adminEmail: user.email });
+      const result = await toggleAvailability({
+        donorId,
+        availability: nextValue,
+        adminEmail: user.email ?? null,
+      });
       setStatusMessage(result.message);
       if (result.success) {
         router.refresh();
@@ -170,7 +176,7 @@ export function DonorAdminTable({
     if (!user?.email) return;
     if (!window.confirm('এই ডোনারকে মুছে ফেলতে চান? এটি অপরিবর্তনীয়।')) return;
     startTransition(async () => {
-      const result = await deleteDonor({ donorId, adminEmail: user.email });
+      const result = await deleteDonor({ donorId, adminEmail: user.email ?? null });
       setStatusMessage(result.message);
       if (result.success) {
         router.refresh();

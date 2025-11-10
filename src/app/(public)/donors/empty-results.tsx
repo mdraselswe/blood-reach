@@ -34,7 +34,7 @@ export function DonorResultsEmptyState({ resetHref = '/donors' }: { resetHref?: 
           সব ফিল্টার রিসেট করুন
         </button>
         <Link
-          href="/donor-request"
+          href={{ pathname: '/donors', query: { intent: 'request' } }}
           className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
         >
           জরুরি রক্তের পোস্ট দিন

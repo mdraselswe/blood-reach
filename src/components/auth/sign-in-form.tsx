@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,7 +14,8 @@ export function SignInForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
+  const redirectParam = searchParams.get('redirectTo');
+  const redirectTo: Route = redirectParam && redirectParam.startsWith('/') ? (redirectParam as Route) : ('/dashboard' as Route);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,7 +59,7 @@ export function SignInForm() {
           <label htmlFor="password" className="font-semibold text-slate-700">
             পাসওয়ার্ড
           </label>
-          <Link href="/reset" className="text-xs font-semibold text-primary-600">
+          <Link href={{ pathname: '/login', query: { reset: '1' } }} className="text-xs font-semibold text-primary-600">
             পাসওয়ার্ড ভুলে গেছেন?
           </Link>
         </div>

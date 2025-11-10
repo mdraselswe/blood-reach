@@ -4,24 +4,26 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { Database } from '@/types/database';
 import { supabaseBrowserClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/components/auth/auth-provider';
 import { DonorProfileForm } from '@/app/dashboard/donor/profile/profile-form';
 import { ensureDonorProfileForCurrentUser } from '@/app/dashboard/donor/profile/actions';
 
-type DonorProfile = {
-  id: string;
-  display_name: string;
-  blood_group: string;
-  phone_primary: string;
-  district: string | null;
-  area: string | null;
-  last_donation_at: string | null;
-  donation_count: number | null;
-  emergency_ready: boolean | null;
-  share_contact: boolean | null;
-  note: string | null;
-};
+type DonorProfile = Pick<
+  Database['public']['Tables']['donors']['Row'],
+  | 'id'
+  | 'display_name'
+  | 'blood_group'
+  | 'phone_primary'
+  | 'district'
+  | 'area'
+  | 'last_donation_at'
+  | 'donation_count'
+  | 'emergency_ready'
+  | 'share_contact'
+  | 'about'
+>;
 
 export default function DonorProfilePage() {
   const router = useRouter();
@@ -48,7 +50,7 @@ export default function DonorProfilePage() {
       const { data, error } = await supabase
         .from('donors')
         .select(
-          'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, note',
+          'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about',
         )
         .eq('user_id', user.id)
         .maybeSingle();
@@ -65,7 +67,7 @@ export default function DonorProfilePage() {
       }
 
       if (data) {
-        setDonor(data);
+        setDonor(data as DonorProfile);
         setIsFetching(false);
         return;
       }
@@ -83,13 +85,13 @@ export default function DonorProfilePage() {
         const { data: refetched, error: refetchError } = await supabase
           .from('donors')
           .select(
-            'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, note',
+            'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about',
           )
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (!refetchError && refetched) {
-          setDonor(refetched);
+          setDonor(refetched as DonorProfile);
         } else {
           if (refetchError) {
             console.error('Failed to reload donor profile after linking', refetchError);

@@ -86,7 +86,7 @@ export function StoryAdminTable({ stories, error, adminEmails }: Props) {
     if (!user?.email) return;
     if (!window.confirm('এই স্টোরিটি মুছে ফেলতে চান? এটি অপরিবর্তনীয়।')) return;
     startTransition(async () => {
-      const result = await deleteStory({ storyId, adminEmail: user.email });
+      const result = await deleteStory({ storyId, adminEmail: user.email ?? null });
       setMessage(result.message);
       if (result.success) {
         router.refresh();

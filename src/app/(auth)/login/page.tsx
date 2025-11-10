@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { AuthCard } from '@/components/auth/auth-card';
 import { SignInForm } from '@/components/auth/sign-in-form';
@@ -17,7 +18,17 @@ export default function LoginPage() {
         </p>
       }
     >
-      <SignInForm />
+      <Suspense
+        fallback={(
+          <div className="grid gap-4">
+            <div className="h-10 rounded-2xl bg-slate-100" />
+            <div className="h-10 rounded-2xl bg-slate-100" />
+            <div className="h-12 rounded-full bg-slate-100" />
+          </div>
+        )}
+      >
+        <SignInForm />
+      </Suspense>
     </AuthCard>
   );
 }
