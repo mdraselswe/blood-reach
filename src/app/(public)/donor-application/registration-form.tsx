@@ -6,17 +6,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { registerDonor } from '@/app/(public)/donor-application/actions';
 import { cn } from '@/lib/utils';
+import { SuccessModal } from './success-modal';
 
 const formSchema = z.object({
   display_name: z.string().min(3, 'কমপক্ষে ৩ অক্ষর লিখুন'),
   blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], {
     required_error: 'ব্লাড গ্রুপ নির্বাচন করুন',
   }),
+  gender: z.enum(['Male', 'Female', 'Other'], {
+    required_error: 'লিঙ্গ নির্বাচন করুন',
+  }),
   phone_primary: z.string().min(10, 'বৈধ ফোন নম্বর লিখুন'),
   email: z.string().email('বৈধ ইমেল লিখুন').optional().or(z.literal('')),
   district: z.string().min(2, 'জেলার নাম লিখুন'),
   area: z.string().min(2, 'এলাকার নাম লিখুন'),
   institute: z.string().max(200, '২০০ অক্ষরের বেশি লেখা যাবে না').optional().or(z.literal('')),
+  department: z.string().max(100).optional().or(z.literal('')),
+  batch: z.string().max(50).optional().or(z.literal('')),
   emergency_ready: z.boolean().optional(),
   about: z.string().max(400, '৪০০ অক্ষরের বেশি লেখা যাবে না').optional(),
   last_donation_at: z
@@ -44,15 +50,23 @@ type Props = {
     name_en: string | null;
     type: string | null;
     district: string | null;
+    departments: string[];
+    batches: string[];
   }>;
 };
 
 const bloodGroups: FormSchema['blood_group'][] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const genders = [
+  { value: 'Male', label: 'পুরুষ' },
+  { value: 'Female', label: 'মহিলা' },
+  { value: 'Other', label: 'অন্যান্য' },
+] as const;
 
 export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
   const [isPending, startTransition] = useTransition();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const {
     register,
@@ -73,6 +87,14 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
   const selectedDistrict = watch('district');
   const selectedArea = watch('area');
   const selectedBloodGroup = watch('blood_group');
+  const selectedGender = watch('gender');
+  const selectedInstitute = watch('institute');
+  
+  const instituteDetails = useMemo(() => {
+    if (!selectedInstitute) return null;
+    return institutes.find(i => i.name === selectedInstitute) || null;
+  }, [selectedInstitute, institutes]);
+
   const districts = useMemo(() => Object.keys(areaOptions).sort(), [areaOptions]);
   const areas = useMemo(() => areaOptions[selectedDistrict] ?? [], [areaOptions, selectedDistrict]);
   const hasAreaOptions = useMemo(() => Boolean(selectedDistrict) && areas.length > 0, [areas, selectedDistrict]);
@@ -86,6 +108,28 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
       setValue('area', '');
     }
   }, [selectedDistrict, selectedArea, areas, setValue]);
+
+  const onInvalid = (errors: any) => {
+    console.error('Form validation errors:', errors);
+    const errorFields = Object.keys(errors).map(key => {
+      switch(key) {
+        case 'display_name': return 'নাম';
+        case 'blood_group': return 'ব্লাড গ্রুপ';
+        case 'gender': return 'লিঙ্গ';
+        case 'phone_primary': return 'ফোন নম্বর';
+        case 'district': return 'জেলা';
+        case 'area': return 'এলাকা';
+        case 'institute': return 'শিক্ষা প্রতিষ্ঠান';
+        case 'email': return 'ইমেল';
+        case 'last_donation_at': return 'সর্বশেষ রক্তদানের তারিখ';
+        case 'donation_count': return 'রক্তদানের সংখ্যা';
+        case 'about': return 'অতিরিক্ত তথ্য';
+        default: return key;
+      }
+    }).join(', ');
+    setServerMessage(`অনুগ্রহ করে নিচের তথ্যগুলো সঠিকভাবে পূরণ করুন: ${errorFields}`);
+    setServerErrors({});
+  };
 
   const onSubmit = handleSubmit((values) => {
     setServerMessage(null);
@@ -117,15 +161,22 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
       }
 
       setServerMessage(result.message ?? 'আবেদন সফলভাবে জমা হয়েছে।');
+      setShowSuccessModal(true);
       reset();
     });
-  });
+  }, onInvalid);
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="grid gap-6 rounded-3xl border border-white bg-white/90 p-6 shadow-sm sm:p-10"
-    >
+    <>
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={serverMessage || 'আপনার আবেদনটি গ্রহণ করা হয়েছে! ভেরিফিকেশনের জন্য আমাদের টিম শীঘ্রই যোগাযোগ করবে।'}
+      />
+      <form
+        onSubmit={onSubmit}
+        className="grid gap-6 rounded-3xl border border-white bg-white/90 p-6 shadow-sm sm:p-10"
+      >
       <div className="grid gap-2 text-sm">
         <label className="font-semibold text-slate-700" htmlFor="display_name">
           সম্পূর্ণ নাম
@@ -140,31 +191,57 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
         <FormError error={errors.display_name?.message || serverErrors.display_name?.[0]} />
       </div>
 
+      <div className="grid gap-2 text-sm">
+        <label className="font-semibold text-slate-700">ব্লাড গ্রুপ</label>
+        <div className="flex flex-wrap gap-2">
+          {bloodGroups.map((group) => (
+            <label
+              key={group}
+              className={cn(
+                'cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition',
+                selectedBloodGroup === group
+                  ? 'border-primary bg-primary text-white shadow-soft'
+                  : 'border-slate-200 text-slate-600 hover:border-primary hover:bg-primary-50',
+              )}
+            >
+              <input
+                type="radio"
+                value={group}
+                className="sr-only"
+                {...register('blood_group')}
+              />
+              {group}
+            </label>
+          ))}
+        </div>
+        <FormError error={errors.blood_group?.message || serverErrors.blood_group?.[0]} />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2 text-sm">
-          <label className="font-semibold text-slate-700">ব্লাড গ্রুপ</label>
+          <label className="font-semibold text-slate-700">লিঙ্গ</label>
           <div className="flex flex-wrap gap-2">
-            {bloodGroups.map((group) => (
+            {genders.map((gender) => (
               <label
-                key={group}
+                key={gender.value}
                 className={cn(
                   'cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition',
-                  selectedBloodGroup === group
+                  selectedGender === gender.value
                     ? 'border-primary bg-primary text-white shadow-soft'
                     : 'border-slate-200 text-slate-600 hover:border-primary hover:bg-primary-50',
                 )}
               >
                 <input
                   type="radio"
-                  value={group}
+                  value={gender.value}
                   className="sr-only"
-                  {...register('blood_group')}
+                  {...register('gender')}
                 />
-                {group}
+                {gender.label}
               </label>
             ))}
           </div>
-          <FormError error={errors.blood_group?.message || serverErrors.blood_group?.[0]} />
+          <FormError error={errors.gender?.message || serverErrors.gender?.[0]} />
         </div>
         <div className="grid gap-2 text-sm">
           <label className="font-semibold text-slate-700" htmlFor="phone_primary">
@@ -255,6 +332,59 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
         <FormError error={errors.institute?.message || serverErrors.institute?.[0]} />
       </div>
 
+      {instituteDetails && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2 text-sm">
+            <label className="font-semibold text-slate-700" htmlFor="department">
+              বিভাগ (Department)
+            </label>
+            {instituteDetails.departments?.length > 0 ? (
+              <select
+                id="department"
+                {...register('department')}
+                className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="">বিভাগ নির্বাচন করুন</option>
+                {instituteDetails.departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                এই প্রতিষ্ঠানের জন্য কোনো বিভাগ তালিকাভুক্ত নেই।
+              </p>
+            )}
+            <FormError error={errors.department?.message || serverErrors.department?.[0]} />
+          </div>
+          <div className="grid gap-2 text-sm">
+            <label className="font-semibold text-slate-700" htmlFor="batch">
+              ব্যাচ (Batch)
+            </label>
+            {instituteDetails.batches?.length > 0 ? (
+              <select
+                id="batch"
+                {...register('batch')}
+                className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="">ব্যাচ নির্বাচন করুন</option>
+                {instituteDetails.batches.map((batch) => (
+                  <option key={batch} value={batch}>
+                    {batch}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                এই প্রতিষ্ঠানের জন্য কোনো ব্যাচ তালিকাভুক্ত নেই।
+              </p>
+            )}
+            <FormError error={errors.batch?.message || serverErrors.batch?.[0]} />
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2 text-sm">
           <label className="font-semibold text-slate-700" htmlFor="email">
@@ -325,7 +455,7 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
         <FormError error={errors.about?.message || serverErrors.about?.[0]} />
       </div>
 
-      {serverMessage ? (
+      {serverMessage && !showSuccessModal && !isSubmitSuccessful ? (
         <div
           className={`rounded-2xl border px-4 py-3 text-sm ${
             isSubmitSuccessful ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-amber-100 bg-amber-50 text-amber-700'
@@ -346,6 +476,7 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
         ফর্ম জমা দিলে আমাদের টিম আপনার সাথে যোগাযোগ করবে। যাচাইয়ের পর আপনার প্রোফাইল প্রকাশ করা হবে।
       </p>
     </form>
+    </>
   );
 }
 

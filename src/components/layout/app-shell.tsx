@@ -41,9 +41,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             { 
               label: 'অ্যাডমিন', 
               submenu: [
-                { href: '/dashboard/admin/donors' as Route, label: 'ডোনার ম্যানেজমেন্ট' },
-                { href: '/dashboard/admin/stories' as Route, label: 'স্টোরি ম্যানেজমেন্ট' },
-                { href: '/dashboard/admin/institutes' as Route, label: 'ইনস্টিটিউট ম্যানেজমেন্ট' },
+                { href: '/dashboard/admin/donors' as Route, label: 'ডোনার সেটিংস' },
+                { href: '/dashboard/admin/stories' as Route, label: 'স্টোরি সেটিংস' },
+                { href: '/dashboard/admin/institutes' as Route, label: 'ইনস্টিটিউট সেটিংস' },
               ]
             },
           ]

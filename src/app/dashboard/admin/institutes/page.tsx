@@ -23,8 +23,14 @@ export default function InstitutesManagementPage() {
     name_en: '',
     type: '',
     district: '',
+    departments: [] as string[],
+    batches: [] as string[],
     is_active: true,
   });
+
+  // Temp inputs for adding departments/batches
+  const [newDepartment, setNewDepartment] = useState('');
+  const [newBatch, setNewBatch] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,6 +76,8 @@ export default function InstitutesManagementPage() {
           p_name_en: formData.name_en || null,
           p_type: formData.type || null,
           p_district: formData.district || null,
+          p_departments: formData.departments,
+          p_batches: formData.batches,
           p_is_active: formData.is_active,
         } as any);
 
@@ -90,6 +98,8 @@ export default function InstitutesManagementPage() {
           p_name_en: formData.name_en || null,
           p_type: formData.type || null,
           p_district: formData.district || null,
+          p_departments: formData.departments,
+          p_batches: formData.batches,
           p_is_active: formData.is_active,
         } as any);
 
@@ -106,7 +116,9 @@ export default function InstitutesManagementPage() {
       }
 
       // Reset form and reload
-      setFormData({ name: '', name_en: '', type: '', district: '', is_active: true });
+      setFormData({ name: '', name_en: '', type: '', district: '', departments: [], batches: [], is_active: true });
+      setNewDepartment('');
+      setNewBatch('');
       setIsAdding(false);
       setEditingId(null);
       loadInstitutes();
@@ -122,6 +134,8 @@ export default function InstitutesManagementPage() {
       name_en: institute.name_en || '',
       type: institute.type || '',
       district: institute.district || '',
+      departments: institute.departments || [],
+      batches: institute.batches || [],
       is_active: institute.is_active,
     });
     setEditingId(institute.id);
@@ -147,9 +161,12 @@ export default function InstitutesManagementPage() {
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', name_en: '', type: '', district: '', is_active: true });
-    setIsAdding(false);
+    setFormData({ name: '', name_en: '', type: '', district: '', departments: [], batches: [], is_active: true });
+    setNewDepartment('');
+    setNewBatch('');
     setEditingId(null);
+    setIsAdding(false);
+    setError(null);
   };
 
   if (isLoading) {
@@ -279,6 +296,114 @@ export default function InstitutesManagementPage() {
                     <option value="গোপালগঞ্জ">গোপালগঞ্জ</option>
                     <option value="ব্রাহ্মণবাড়িয়া">ব্রাহ্মণবাড়িয়া</option>
                   </select>
+                </div>
+
+                {/* Departments Section */}
+                <div className="grid gap-2 sm:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700">Departments</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      placeholder="e.g., Computer Science"
+                      className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newDepartment.trim() && !formData.departments.includes(newDepartment.trim())) {
+                            setFormData({ ...formData, departments: [...formData.departments, newDepartment.trim()] });
+                            setNewDepartment('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newDepartment.trim() && !formData.departments.includes(newDepartment.trim())) {
+                          setFormData({ ...formData, departments: [...formData.departments, newDepartment.trim()] });
+                          setNewDepartment('');
+                        }
+                      }}
+                      className="rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.departments.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.departments.map((dept, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-sm text-primary-700"
+                        >
+                          {dept}
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, departments: formData.departments.filter((_, i) => i !== idx) })}
+                            className="hover:text-primary-900"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Batches Section */}
+                <div className="grid gap-2 sm:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700">Batches</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newBatch}
+                      onChange={(e) => setNewBatch(e.target.value)}
+                      placeholder="e.g., 2020, 47th"
+                      className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newBatch.trim() && !formData.batches.includes(newBatch.trim())) {
+                            setFormData({ ...formData, batches: [...formData.batches, newBatch.trim()] });
+                            setNewBatch('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newBatch.trim() && !formData.batches.includes(newBatch.trim())) {
+                          setFormData({ ...formData, batches: [...formData.batches, newBatch.trim()] });
+                          setNewBatch('');
+                        }
+                      }}
+                      className="rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.batches.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.batches.map((batch, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-700"
+                        >
+                          {batch}
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, batches: formData.batches.filter((_, i) => i !== idx) })}
+                            className="hover:text-emerald-900"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:col-span-2">

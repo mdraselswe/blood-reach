@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Database } from '@/types/database';
 import { useAuth } from '@/components/auth/auth-provider';
-import { approveDonor, rejectDonor, deleteDonor } from '@/app/dashboard/admin/donors/actions';
+import { approveDonor, rejectDonor, deleteDonor, toggleVerification } from '@/app/dashboard/admin/donors/actions';
 
 type Donor = Database['public']['Tables']['donors']['Row'];
 
@@ -81,7 +81,20 @@ export function DonorAdminTable({
   const handleApprove = (donorId: string) => {
     if (!user?.email || !user.id) return;
     startTransition(async () => {
-      const result = await approveDonor({ donorId, adminEmail: user.email, adminUserId: user.id });
+      const result = await approveDonor({ donorId, adminEmail: user.email ?? null, adminUserId: user.id ?? null });
+      setStatusMessage(result.message);
+      if (result.success) router.refresh();
+    });
+  };
+
+  const handleToggleVerification = (donorId: string, currentStatus: boolean) => {
+    if (!user?.email) return;
+    startTransition(async () => {
+      const result = await toggleVerification({ 
+        donorId, 
+        verify: !currentStatus, 
+        adminEmail: user.email ?? null 
+      });
       setStatusMessage(result.message);
       if (result.success) router.refresh();
     });
@@ -90,7 +103,7 @@ export function DonorAdminTable({
   const handleReject = (donorId: string) => {
     if (!user?.email) return;
     startTransition(async () => {
-      const result = await rejectDonor({ donorId, adminEmail: user.email });
+      const result = await rejectDonor({ donorId, adminEmail: user.email ?? null });
       setStatusMessage(result.message);
       if (result.success) router.refresh();
     });
@@ -99,7 +112,7 @@ export function DonorAdminTable({
   const handleDelete = (donorId: string, name: string) => {
     if (!user?.email || !confirm(`"${name}" কে মুছে ফেলতে চান?`)) return;
     startTransition(async () => {
-      const result = await deleteDonor({ donorId, adminEmail: user.email });
+      const result = await deleteDonor({ donorId, adminEmail: user.email ?? null });
       setStatusMessage(result.message);
       if (result.success) router.refresh();
     });
@@ -108,8 +121,8 @@ export function DonorAdminTable({
   if (!isAdmin) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-slate-900">অনধিকার প্রবেশ</h1>
-        <p className="mt-3 text-sm text-slate-600">এই পৃষ্ঠাটি শুধুমাত্র অনুমোদিত অ্যাডমিনদের জন্য।</p>
+        <h1 className="text-2xl font-semibold text-slate-900">অনুমতি নেই</h1>
+        <p className="mt-3 text-sm text-slate-600">এই পেজটি শুধুমাত্র অ্যাডমিনদের জন্য।</p>
       </div>
     );
   }
@@ -133,7 +146,7 @@ export function DonorAdminTable({
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">ডোনার ম্যানেজমেন্ট</h1>
         <p className="mt-1 text-sm text-slate-600">
-          মোট {totalCount} জন ডোনার {approvalFilter === 'pending' && `(${pendingCount} অপেক্ষমাণ)`}
+          মোট {totalCount} জন ডোনার {approvalFilter === 'pending' && `(${pendingCount} পেন্ডিং)`}
         </p>
       </div>
 
@@ -165,7 +178,7 @@ export function DonorAdminTable({
                 : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            অপেক্ষমাণ {pendingCount > 0 && `(${pendingCount})`}
+            পেন্ডিং {pendingCount > 0 && `(${pendingCount})`}
           </button>
           <button
             onClick={() => handleFilterChange('approved')}
@@ -175,7 +188,7 @@ export function DonorAdminTable({
                 : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            অনুমোদিত
+            অ্যাপ্রুভড
           </button>
         </div>
 
@@ -232,28 +245,40 @@ export function DonorAdminTable({
                     )}
                     {!donor.approved && (
                       <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
-                        ⏳ অপেক্ষমাণ
+                        ⏳ পেন্ডিং
                       </span>
                     )}
                     {donor.approved && (
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-                        ✓ অনুমোদিত
+                        ✓ অ্যাপ্রুভড
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
                     <div>📍 {donor.area ? `${donor.area}, ` : ''}{donor.district}</div>
                     <div>📞 {donor.phone_primary}</div>
                     {donor.email && <div>✉️ {donor.email}</div>}
                     {donor.institute && <div>🎓 {donor.institute}</div>}
                     <div>📅 রেজিস্টার: {formatDate(donor.created_at)}</div>
-                    {donor.approved_at && <div>✅ অনুমোদিত: {formatDate(donor.approved_at)}</div>}
+                    {donor.approved_at && <div>✅ অ্যাপ্রুভ: {formatDate(donor.approved_at)}</div>}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
+                  <button
+                    onClick={() => handleToggleVerification(donor.id, donor.verified ?? false)}
+                    disabled={pending}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold disabled:opacity-50 ${
+                      donor.verified
+                        ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {donor.verified ? '✓ ভেরিফাইড' : '○ ভেরিফাই করুন'}
+                  </button>
+
                   {!donor.approved ? (
                     <>
                       <button
@@ -261,7 +286,7 @@ export function DonorAdminTable({
                         disabled={pending}
                         className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                       >
-                        ✓ অনুমোদন করুন
+                        ✓ অ্যাপ্রুভ করুন
                       </button>
                       <button
                         onClick={() => handleDelete(donor.id, donor.display_name)}
@@ -278,7 +303,7 @@ export function DonorAdminTable({
                         disabled={pending}
                         className="rounded-full border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-50 disabled:opacity-50"
                       >
-                        ↩ প্রত্যাহার করুন
+                        ↩ বাতিল করুন
                       </button>
                       <button
                         onClick={() => handleDelete(donor.id, donor.display_name)}

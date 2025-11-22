@@ -116,18 +116,18 @@ async function fetchAreaOptions() {
 
 async function fetchInstitutes() {
   const supabase = supabaseServerClient();
-  const { data, error } = await supabase
+  const { data: institutes, error: institutesError } = await supabase
     .from('institute_lookup')
-    .select('id, name, name_en, type, district')
+    .select('id, name, name_en, type, district, departments, batches')
     .eq('is_active', true)
     .order('name', { ascending: true });
 
-  if (error) {
-    console.error('Failed to load institutes', error);
+  if (institutesError) {
+    console.error('Failed to load institutes', institutesError);
     return [];
   }
 
-  return data ?? [];
+  return institutes ?? [];
 }
 
 export default async function RegisterPage() {

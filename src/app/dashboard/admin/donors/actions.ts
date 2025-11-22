@@ -121,12 +121,12 @@ export async function approveDonor({
 
   if (error) {
     console.error('Failed to approve donor', error);
-    return { success: false, message: 'ডোনার অনুমোদন করা যায়নি।' };
+    return { success: false, message: 'ডোনার অ্যাপ্রুভ করা যায়নি।' };
   }
 
   revalidatePath('/dashboard/admin/donors');
   revalidatePath('/donors');
-  return { success: true, message: 'ডোনার সফলভাবে অনুমোদিত হয়েছে.' };
+  return { success: true, message: 'ডোনার সফলভাবে অ্যাপ্রুভ হয়েছে।' };
 }
 
 export async function rejectDonor({ 
@@ -152,10 +152,10 @@ export async function rejectDonor({
 
   if (error) {
     console.error('Failed to reject donor', error);
-    return { success: false, message: 'ডোনার প্রত্যাখ্যান করা যায়নি.' };
+    return { success: false, message: 'ডোনার রিজেক্ট করা যায়নি।' };
   }
 
   revalidatePath('/dashboard/admin/donors');
   revalidatePath('/donors');
-  return { success: true, message: 'ডোনার প্রত্যাখ্যান করা হয়েছে.' };
+  return { success: true, message: 'ডোনার রিজেক্ট করা হয়েছে।' };
 }

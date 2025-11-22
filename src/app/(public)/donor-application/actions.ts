@@ -10,6 +10,9 @@ import type { Database } from '@/types/database';
 const donorSchema = z.object({
   display_name: z.string().min(3, 'নাম কমপক্ষে ৩ অক্ষরের হওয়া প্রয়োজন'),
   blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
+  gender: z.enum(['Male', 'Female', 'Other'], {
+    required_error: 'লিঙ্গ নির্বাচন করুন',
+  }),
   phone_primary: z
     .string()
     .min(10, 'বৈধ ফোন নম্বর লিখুন')
@@ -18,6 +21,8 @@ const donorSchema = z.object({
   area: z.string().min(2, 'এলাকার নাম লিখুন'),
   email: z.string().email('বৈধ ইমেল লিখুন').optional().or(z.literal('')),
   institute: z.string().max(200, 'শিক্ষা প্রতিষ্ঠানের নাম ২০০ অক্ষরের মধ্যে হতে হবে').optional().or(z.literal('')),
+  department: z.string().max(100).optional().or(z.literal('')),
+  batch: z.string().max(50).optional().or(z.literal('')),
   emergency_ready: z.boolean().optional(),
   about: z.string().max(400).optional(),
   last_donation_at: z
@@ -37,14 +42,18 @@ const donorSchema = z.object({
 
 export async function registerDonor(formData: FormData) {
   const rawBloodGroup = formData.get('blood_group');
+  const rawGender = formData.get('gender');
   const result = donorSchema.safeParse({
     display_name: formData.get('display_name')?.toString().trim(),
     blood_group: rawBloodGroup?.toString(),
+    gender: rawGender?.toString(),
     phone_primary: formData.get('phone_primary')?.toString().trim(),
     district: formData.get('district')?.toString().trim(),
     area: formData.get('area')?.toString().trim(),
     email: formData.get('email')?.toString().trim(),
     institute: formData.get('institute')?.toString().trim(),
+    department: formData.get('department')?.toString().trim(),
+    batch: formData.get('batch')?.toString().trim(),
     emergency_ready: formData.get('emergency_ready') === 'on',
     about: formData.get('about')?.toString().trim(),
     last_donation_at: formData.get('last_donation_at')?.toString(),
@@ -71,11 +80,14 @@ export async function registerDonor(formData: FormData) {
     const insertPayload: Database['public']['Tables']['donors']['Insert'] = {
       display_name: payload.display_name,
       blood_group: payload.blood_group,
+      gender: payload.gender,
       phone_primary: payload.phone_primary,
       district: payload.district,
       area: payload.area,
       email: payload.email || null,
       institute: payload.institute || null,
+      department: payload.department || null,
+      batch: payload.batch || null,
       emergency_ready: Boolean(payload.emergency_ready),
       about: payload.about,
       share_contact: true,

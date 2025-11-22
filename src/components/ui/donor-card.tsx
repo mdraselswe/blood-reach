@@ -18,8 +18,7 @@ const availabilityBadgeMeta: Record<
 };
 
 type Donor = Pick<Database['public']['Tables']['donors']['Row'],
-  |
-    'id'
+  | 'id'
   | 'display_name'
   | 'district'
   | 'area'
@@ -35,6 +34,11 @@ type Donor = Pick<Database['public']['Tables']['donors']['Row'],
   | 'share_contact'
   | 'tags'
   | 'about'
+  | 'institute'
+  | 'department'
+  | 'batch'
+  | 'gender'
+  | 'birth_year'
 >;
 
 export function DonorCard({ donor }: { donor: Donor }) {
@@ -46,6 +50,12 @@ export function DonorCard({ donor }: { donor: Donor }) {
     if (!donor.area) return donor.district;
     return `${donor.area}, ${donor.district}`;
   }, [donor.area, donor.district]);
+
+  const age = useMemo(() => {
+    if (!donor.birth_year) return null;
+    const currentYear = new Date().getFullYear();
+    return currentYear - donor.birth_year;
+  }, [donor.birth_year]);
 
   const lastDonation = useMemo(() => {
     if (!donor.last_donation_at) return 'তারিখ অজানা';
@@ -137,19 +147,34 @@ export function DonorCard({ donor }: { donor: Donor }) {
     <article className="relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-3xl border border-white bg-white p-6 shadow-sm transition hover:-translate-y-[2px] hover:shadow-lg">
       {donor.verified ? (
         <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-1 rounded-bl-3xl bg-emerald-500 px-4 py-1 text-xs font-semibold text-white shadow-sm">
-          <span className="text-sm">★</span> ভেরিফায়েড ডোনার
+          <span className="text-sm">★</span> ভেরিফায়েড
         </div>
       ) : null}
+      
       <header className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary text-lg font-bold text-white shadow-soft">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-primary text-lg font-bold text-white shadow-soft">
             {donor.blood_group}
           </div>
           <div className="flex min-w-0 flex-col gap-1">
             <h3 className="text-lg font-semibold leading-tight text-slate-900">
               {donor.display_name}
             </h3>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+              <span>{locationLabel}</span>
+              {donor.gender || age ? (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  <span>
+                    {[
+                      donor.gender === 'Male' ? 'পুরুষ' : donor.gender === 'Female' ? 'মহিলা' : donor.gender,
+                      age ? `${age} বছর` : null
+                    ].filter(Boolean).join(' • ')}
+                  </span>
+                </>
+              ) : null}
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               <span
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
@@ -165,7 +190,6 @@ export function DonorCard({ donor }: { donor: Donor }) {
                 </span>
               ) : null}
             </div>
-            <p className="text-xs font-medium text-slate-500">{locationLabel}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
@@ -178,6 +202,19 @@ export function DonorCard({ donor }: { donor: Donor }) {
       </header>
 
       <div className="grid gap-3 text-sm text-slate-600">
+        {(donor.institute || donor.department || donor.batch) ? (
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-xs">
+            {donor.institute && <p className="font-semibold text-slate-700">{donor.institute}</p>}
+            {(donor.department || donor.batch) && (
+              <p className={cn("text-slate-500", donor.institute && "mt-0.5")}>
+                {[donor.department, donor.batch ? `ব্যাচ ${donor.batch}` : null]
+                  .filter(Boolean)
+                  .join(' • ')}
+              </p>
+            )}
+          </div>
+        ) : null}
+
         <div className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/40 p-4">
           <dl className="grid gap-3 text-xs text-slate-500 sm:grid-cols-3">
             <div className="space-y-1">
@@ -195,9 +232,11 @@ export function DonorCard({ donor }: { donor: Donor }) {
               <dd className="text-sm text-slate-900">{donor.share_contact ? 'সরাসরি' : 'সীমিত'}</dd>
             </div>
           </dl>
+          
           {donor.about ? (
             <p className="rounded-2xl bg-white/90 p-3 text-sm text-slate-600">{donor.about}</p>
           ) : null}
+          
           {donor.share_contact && formattedPrimaryPhone ? (
             <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600">
               <span className="text-sm font-semibold text-slate-900">{formattedPrimaryPhone}</span>
@@ -210,8 +249,9 @@ export function DonorCard({ donor }: { donor: Donor }) {
               </button>
             </div>
           ) : null}
+          
           {donor.tags?.length ? (
-            <div className="grid grid-cols-2 items-center gap-2 text-xs font-semibold text-primary-700">
+            <div className="flex flex-wrap gap-2 text-xs font-semibold text-primary-700">
               {donor.tags.slice(0, 4).map((tag) => (
                 <span
                   key={tag}

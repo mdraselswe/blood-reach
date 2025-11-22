@@ -12,6 +12,9 @@ type Filters = {
   area?: string;
   availability?: 'available' | 'temporarily_unavailable';
   institute?: string;
+  department?: string;
+  batch?: string;
+  gender?: string;
 };
 
 export async function DonorResults({ filters, page, pageSize }: { filters: Filters; page: number; pageSize: number }) {
@@ -42,7 +45,11 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
         share_contact,
         tags,
         about,
-        institute
+        institute,
+        department,
+        batch,
+        gender,
+        birth_year
       `,
         includeCount ? { count: 'exact' } : undefined,
       )
@@ -66,6 +73,15 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
     }
     if (filters.institute) {
       query = query.eq('institute', filters.institute);
+    }
+    if (filters.department) {
+      query = query.eq('department', filters.department);
+    }
+    if (filters.gender) {
+    query = query.eq('gender', filters.gender);
+  }
+    if (filters.batch) {
+      query = query.eq('batch', filters.batch);
     }
     if (filters.query) {
       query = query.textSearch('searchable_text', filters.query, {

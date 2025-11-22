@@ -77,7 +77,7 @@ async function fetchFilterData() {
     .eq('approved', true),
     supabase
       .from('institute_lookup')
-      .select('id, name, name_en, type')
+      .select('id, name, name_en, type, departments, batches')
       .eq('is_active', true)
       .order('name', { ascending: true }),
   ]);
@@ -136,6 +136,8 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
   const area = getSingle('area');
   const availability = getSingle('availability');
   const institute = getSingle('institute');
+  const department = getSingle('department');
+  const batch = getSingle('batch');
 
   const VALID_BLOOD_GROUPS = [
     'A+',
@@ -155,6 +157,8 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
     return (VALID_BLOOD_GROUPS as readonly string[]).includes(value);
   };
 
+  const gender = getSingle('gender');
+
   return {
     query: q?.slice(0, 80),
     bloodGroup: isBloodGroup(group) ? group : undefined,
@@ -165,6 +169,9 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
         ? availability
         : undefined,
     institute: institute?.slice(0, 200),
+    department: department?.slice(0, 100),
+    batch: batch?.slice(0, 50),
+    gender: gender?.slice(0, 20),
   } as const;
 }
 
@@ -199,7 +206,7 @@ export default async function DonorsPage({
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-slate-900">ডোনার ডিরেক্টরি</h1>
           <p className="text-sm text-slate-600 sm:text-base">
-            বর্তমানে <span className="font-semibold text-primary-600">{availableCount}</span> জন ডোনার সক্রিয়। আপনার প্রয়োজন অনুসারে ফিল্টার করে দ্রুত যোগাযোগ করুন।
+            বর্তমানে <span className="font-semibold text-primary-600">{availableCount}</span> জন ডোনার সক্রিয়। ফিল্টার করুন।
           </p>
         </div>
       </div>

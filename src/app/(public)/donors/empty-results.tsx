@@ -14,33 +14,35 @@ export function DonorResultsEmptyState({ resetHref = '/donors' }: { resetHref?: 
         <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-2xl">
           🩸
         </span>
-        <p className="text-base font-semibold text-slate-800">আপনার সার্চ অনুযায়ী ডোনার পাওয়া যায়নি</p>
+        <p className="text-base font-semibold text-slate-800">ডোনার পাওয়া যায়নি</p>
         <p className="max-w-lg text-sm text-slate-500">
-          ফিল্টার পরিবর্তন করে দেখুন অথবা কাছাকাছি এলাকার মধ্যে খোঁজ করুন। চাইলে আপনি নতুন রক্তের প্রয়োজনের পোস্টও করতে পারেন।
+          ফিল্টার পরিবর্তন করুন বা অন্য এলাকায় দেখুন। নতুন রক্তের প্রয়োজনের পোস্টও করতে পারেন।
         </p>
       </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        <Link
-          href="/donor-application"
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-600"
-        >
-          নতুন ডোনার যোগ করুন
-        </Link>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:border-primary hover:text-primary-600"
-        >
-          সব ফিল্টার রিসেট করুন
-        </button>
-        <Link
-          href={{ pathname: '/donors', query: { intent: 'request' } }}
-          className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
-        >
-          জরুরি রক্তের পোস্ট দিন
-        </Link>
-      </div>
+        <div className="flex flex-wrap justify-center items-center gap-3">
+          <Link
+            href="/donor-application"
+            className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-3 py-1 text-sm font-semibold text-white hover:bg-primary-700"
+          >
+            <span className="text-lg">➕</span>
+            নতুন ডোনার যোগ করুন
+          </Link>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          >
+            <span className="text-lg">🔄</span>
+            সব ফিল্টার রিসেট করুন
+          </button>
+          <Link
+            href={{ pathname: '/donors', query: { intent: 'request' } }}
+            className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-3 py-1 text-sm font-semibold text-white hover:bg-rose-700"
+          >
+            <span className="text-lg">🆘</span>
+            জরুরি রক্তের পোস্ট দিন
+          </Link>
+        </div>
     </div>
   );
 }
-

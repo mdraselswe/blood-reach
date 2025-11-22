@@ -65,6 +65,8 @@ export type Database = {
           tags: string[] | null;
           share_contact: boolean;
           institute: string | null;
+          department: string | null;
+          batch: string | null;
           approved: boolean;
           approved_at: string | null;
           approved_by: string | null;
@@ -97,6 +99,8 @@ export type Database = {
           tags?: string[] | null;
           share_contact?: boolean;
           institute?: string | null;
+          department?: string | null;
+          batch?: string | null;
           approved?: boolean;
           approved_at?: string | null;
           approved_by?: string | null;
@@ -380,7 +384,11 @@ export type Database = {
           name_en: string | null;
           type: string | null;
           district: string | null;
+          departments: string[];
+          batches: string[];
           is_active: boolean;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: number;
@@ -388,7 +396,11 @@ export type Database = {
           name_en?: string | null;
           type?: string | null;
           district?: string | null;
+          departments?: string[];
+          batches?: string[];
           is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['institute_lookup']['Row']>;
         Relationships: [];
