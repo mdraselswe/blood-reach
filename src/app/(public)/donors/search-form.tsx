@@ -12,6 +12,7 @@ type Filters = {
   district?: string;
   area?: string;
   availability?: 'available' | 'temporarily_unavailable';
+  institute?: string;
 };
 
 type AreaLookup = Record<string, string[]>;
@@ -27,7 +28,15 @@ const bloodGroups: Database['public']['Enums']['blood_group'][] = [
   'O-',
 ];
 
-export function DonorSearchForm({ filters, areaLookup }: { filters: Filters; areaLookup: AreaLookup }) {
+export function DonorSearchForm({ 
+  filters, 
+  areaLookup,
+  institutes,
+}: { 
+  filters: Filters; 
+  areaLookup: AreaLookup;
+  institutes: Array<{ id: number; name: string; name_en: string | null; type: string | null; }>;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -92,6 +101,30 @@ export function DonorSearchForm({ filters, areaLookup }: { filters: Filters; are
         />
         <p className="text-xs text-slate-400">এন্টার চাপুন সার্চ করতে</p>
       </label>
+      <div className="grid gap-3 text-sm font-medium text-slate-600">
+        <span>শিক্ষা প্রতিষ্ঠান</span>
+        <input
+          type="text"
+          list="institutes-filter-list"
+          value={filters.institute ?? ''}
+          onChange={(e) => updateQueryParam('institute', e.target.value || undefined)}
+          className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          placeholder="টাইপ করুন বা নির্বাচন করুন"
+        />
+        <datalist id="institutes-filter-list">
+          {institutes.map((inst) => (
+            <option 
+              key={inst.id} 
+              value={inst.name}
+            >
+              {inst.name_en ? `${inst.name_en} (${inst.name})` : inst.name}
+            </option>
+          ))}
+        </datalist>
+        <p className="text-xs text-slate-400">
+          খালি করতে চাইলে backspace চাপুন
+        </p>
+      </div>
       <div className="grid gap-3 text-sm font-medium text-slate-600">
         <span>ব্লাড গ্রুপ</span>
         <div className="flex flex-wrap gap-2">

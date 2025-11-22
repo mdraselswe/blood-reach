@@ -58,7 +58,7 @@ const getSingleValue = (searchParams: Record<string, string | string[] | undefin
 async function fetchFilterData() {
   const supabase = supabaseServerClient();
 
-  const [areasRes, donorsCountRes, donorDistrictRes] = await Promise.all([
+  const [areasRes, donorsCountRes, donorDistrictRes, institutesRes] = await Promise.all([
     supabase
       .from('area_lookup')
       .select('district, area')
@@ -68,11 +68,18 @@ async function fetchFilterData() {
     supabase
       .from('donors')
       .select('id', { count: 'exact', head: true })
-      .eq('availability', 'available'),
+      .eq('availability', 'available')
+      .eq('approved', true),
     supabase
       .from('donors')
       .select('district, area', { head: false })
-      .eq('availability', 'available'),
+    .eq('availability', 'available')
+    .eq('approved', true),
+    supabase
+      .from('institute_lookup')
+      .select('id, name, name_en, type')
+      .eq('is_active', true)
+      .order('name', { ascending: true }),
   ]);
 
   if (areasRes.error) {
@@ -83,6 +90,9 @@ async function fetchFilterData() {
   }
   if (donorDistrictRes.error) {
     console.error('Failed to load donor districts', donorDistrictRes.error);
+  }
+  if (institutesRes.error) {
+    console.error('Failed to load institutes', institutesRes.error);
   }
 
   const mergedLookup: Record<string, Set<string>> = {};
@@ -112,8 +122,9 @@ async function fetchFilterData() {
   }, {});
 
   const availableCount = donorsCountRes.count ?? 0;
+  const institutes = institutesRes.data ?? [];
 
-  return { areaLookup, availableCount };
+  return { areaLookup, availableCount, institutes };
 }
 
 function parseSearchParams(searchParams: Record<string, string | string[] | undefined>) {
@@ -124,6 +135,7 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
   const district = getSingle('district');
   const area = getSingle('area');
   const availability = getSingle('availability');
+  const institute = getSingle('institute');
 
   const VALID_BLOOD_GROUPS = [
     'A+',
@@ -152,6 +164,7 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
       availability === 'available' || availability === 'temporarily_unavailable'
         ? availability
         : undefined,
+    institute: institute?.slice(0, 200),
   } as const;
 }
 
@@ -175,7 +188,7 @@ export default async function DonorsPage({
     if (parsed > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
     return parsed;
   })();
-  const { areaLookup, availableCount } = await fetchFilterData();
+  const { areaLookup, availableCount, institutes } = await fetchFilterData();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
@@ -191,7 +204,7 @@ export default async function DonorsPage({
         </div>
       </div>
       <div className="grid gap-12 lg:grid-cols-[320px_1fr]">
-        <DonorSearchForm filters={filters} areaLookup={areaLookup} />
+        <DonorSearchForm filters={filters} areaLookup={areaLookup} institutes={institutes} />
         <Suspense fallback={<p className="text-sm text-slate-500">ডোনার তালিকা লোড হচ্ছে…</p>}>
           <DonorResults filters={filters} page={page} pageSize={pageSize} />
         </Suspense>

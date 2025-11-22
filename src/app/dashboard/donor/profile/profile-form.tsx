@@ -17,6 +17,7 @@ type DonorProfile = Pick<
   | 'emergency_ready'
   | 'share_contact'
   | 'about'
+  | 'institute'
 >;
 
 type Props = {
@@ -67,6 +68,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       const emergencyReady = formData.get('emergency_ready') === 'on';
       const shareContact = formData.get('share_contact') === 'on';
       const about = formData.get('about')?.toString() ?? '';
+      const institute = formData.get('institute')?.toString() ?? '';
 
       const updates: Record<string, unknown> = {
         emergency_ready: emergencyReady,
@@ -74,6 +76,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       };
 
       updates.about = about.trim().length ? about.trim() : null;
+      updates.institute = institute.trim().length ? institute.trim() : null;
 
       let nextLastDonationAt: string | null = donor.last_donation_at;
       if (lastDonationAtRaw) {
@@ -118,6 +121,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
           emergency_ready: emergencyReady,
           share_contact: shareContact,
           about: about.trim().length ? about.trim() : null,
+          institute: institute.trim().length ? institute.trim() : null,
           last_donation_at: nextLastDonationAt,
           donation_count: nextDonationCount,
         });
@@ -190,6 +194,21 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
           যোগাযোগ তথ্য পাবলিকলি দেখান
         </label>
       </div>
+
+      <label className="grid gap-2 text-sm">
+        <span className="font-semibold text-slate-700">শিক্ষা প্রতিষ্ঠান (ঐচ্ছিক)</span>
+        <input
+          name="institute"
+          type="text"
+          defaultValue={donor.institute ?? ''}
+          placeholder="স্কুল/কলেজ/বিশ্ববিদ্যালয়ের নাম"
+          maxLength={200}
+          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        />
+        {fieldErrors.institute ? (
+          <p className="text-xs font-medium text-rose-600">{fieldErrors.institute[0]}</p>
+        ) : null}
+      </label>
 
       <label className="grid gap-2 text-sm">
         <span className="font-semibold text-slate-700">অতিরিক্ত নোট</span>

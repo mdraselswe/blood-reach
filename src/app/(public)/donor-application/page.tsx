@@ -114,8 +114,27 @@ async function fetchAreaOptions() {
   return merged;
 }
 
+async function fetchInstitutes() {
+  const supabase = supabaseServerClient();
+  const { data, error } = await supabase
+    .from('institute_lookup')
+    .select('id, name, name_en, type, district')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load institutes', error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
 export default async function RegisterPage() {
-  const areaOptions = await fetchAreaOptions();
+  const [areaOptions, institutes] = await Promise.all([
+    fetchAreaOptions(),
+    fetchInstitutes(),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16">
@@ -129,7 +148,7 @@ export default async function RegisterPage() {
         </p>
       </div>
       <div className="mt-10">
-        <DonorRegistrationForm areaOptions={areaOptions} />
+        <DonorRegistrationForm areaOptions={areaOptions} institutes={institutes} />
       </div>
     </div>
   );

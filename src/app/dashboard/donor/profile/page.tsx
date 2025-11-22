@@ -23,6 +23,7 @@ type DonorProfile = Pick<
   | 'emergency_ready'
   | 'share_contact'
   | 'about'
+  | 'institute'
 >;
 
 export default function DonorProfilePage() {
@@ -50,7 +51,7 @@ export default function DonorProfilePage() {
       const { data, error } = await supabase
         .from('donors')
         .select(
-          'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about',
+          'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about, institute',
         )
         .eq('user_id', user.id)
         .maybeSingle();
@@ -85,7 +86,7 @@ export default function DonorProfilePage() {
         const { data: refetched, error: refetchError } = await supabase
           .from('donors')
           .select(
-            'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about',
+            'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about, institute',
           )
           .eq('user_id', user.id)
           .maybeSingle();

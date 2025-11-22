@@ -6,7 +6,11 @@ import type { Route } from 'next';
 import { cn } from '@/lib/utils';
 
 type NavHref = Route | { pathname: Route; hash?: string };
-type NavItem = { href: NavHref; label: string };
+type NavItem = {
+  href?: NavHref;
+  label: string;
+  submenu?: { href: NavHref; label: string }[];
+};
 
 export function MobileNav({
   items,
@@ -22,6 +26,11 @@ export function MobileNav({
   isAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+
+  // Flatten items: if item has submenu, show submenu items; otherwise show item
+  const flattenedItems = items.flatMap((item) =>
+    item.submenu ? item.submenu : item.href ? [item as { href: NavHref; label: string }] : []
+  );
 
   return (
     <>
@@ -71,7 +80,7 @@ export function MobileNav({
           </svg>
         </button>
         <nav className="flex flex-col gap-3 text-sm font-semibold text-slate-700">
-          {items.map((item) => {
+          {flattenedItems.map((item) => {
             const key = typeof item.href === 'string' ? item.href : `${item.href.pathname}#${item.href.hash ?? ''}`;
             return (
               <Link

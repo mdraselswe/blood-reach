@@ -38,6 +38,7 @@ export default async function AdminDonorsPage({
   searchParams: SearchParams;
 }) {
   const searchTerm = sanitizeSearchTerm(getSingleParam(searchParams, 'q'));
+  const approvalFilter = getSingleParam(searchParams, 'approval') || 'all'; // 'all', 'pending', 'approved'
   const page = parseInteger(getSingleParam(searchParams, 'page'), 1, { min: 1, max: 10_000 });
   const pageSize = parseInteger(
     getSingleParam(searchParams, 'pageSize'),
@@ -51,10 +52,18 @@ export default async function AdminDonorsPage({
   const supabase = supabaseAdminClient();
 
   const buildQuery = (includeCount: boolean) => {
-    const query = supabase
+    let query = supabase
       .from('donors')
       .select('*', includeCount ? { count: 'exact' } : undefined)
       .order('created_at', { ascending: false });
+
+    // Filter by approval status
+    if (approvalFilter === 'pending') {
+      query = query.eq('approved', false);
+    } else if (approvalFilter === 'approved') {
+      query = query.eq('approved', true);
+    }
+    // 'all' - no filter
 
     if (!searchTerm) {
       return query;
@@ -95,6 +104,7 @@ export default async function AdminDonorsPage({
       currentPage={effectivePage}
       pageSize={pageSize}
       searchQuery={searchTerm ?? ''}
+      approvalFilter={approvalFilter}
       error={finalError?.message ?? null}
       adminEmails={(process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '').split(',').map((item) => item.trim()).filter(Boolean)}
     />

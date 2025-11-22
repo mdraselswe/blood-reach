@@ -95,3 +95,67 @@ export async function deleteDonor({ donorId, adminEmail }: { donorId: string; ad
   revalidatePath('/donors');
   return { success: true, message: 'ডোনার সফলভাবে মুছে ফেলা হয়েছে।' };
 }
+
+export async function approveDonor({ 
+  donorId, 
+  adminEmail, 
+  adminUserId 
+}: { 
+  donorId: string; 
+  adminEmail: string | null; 
+  adminUserId: string | null;
+}): Promise<ActionResult> {
+  if (!isAuthorized(adminEmail)) {
+    return { success: false, message: 'আপনি এই কাজটি করার অনুমতি পাননি।' };
+  }
+
+  const supabase = supabaseAdminClient();
+  const { error } = await supabase
+    .from('donors')
+    .update({ 
+      approved: true,
+      approved_at: new Date().toISOString(),
+      approved_by: adminUserId,
+    })
+    .eq('id', donorId);
+
+  if (error) {
+    console.error('Failed to approve donor', error);
+    return { success: false, message: 'ডোনার অনুমোদন করা যায়নি।' };
+  }
+
+  revalidatePath('/dashboard/admin/donors');
+  revalidatePath('/donors');
+  return { success: true, message: 'ডোনার সফলভাবে অনুমোদিত হয়েছে.' };
+}
+
+export async function rejectDonor({ 
+  donorId, 
+  adminEmail 
+}: { 
+  donorId: string; 
+  adminEmail: string | null; 
+}): Promise<ActionResult> {
+  if (!isAuthorized(adminEmail)) {
+    return { success: false, message: 'আপনি এই কাজটি করার অনুমতি পাননি.' };
+  }
+
+  const supabase = supabaseAdminClient();
+  const { error } = await supabase
+    .from('donors')
+    .update({ 
+      approved: false,
+      approved_at: null,
+      approved_by: null,
+    })
+    .eq('id', donorId);
+
+  if (error) {
+    console.error('Failed to reject donor', error);
+    return { success: false, message: 'ডোনার প্রত্যাখ্যান করা যায়নি.' };
+  }
+
+  revalidatePath('/dashboard/admin/donors');
+  revalidatePath('/donors');
+  return { success: true, message: 'ডোনার প্রত্যাখ্যান করা হয়েছে.' };
+}

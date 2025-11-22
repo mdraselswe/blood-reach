@@ -11,6 +11,7 @@ type Filters = {
   district?: string;
   area?: string;
   availability?: 'available' | 'temporarily_unavailable';
+  institute?: string;
 };
 
 export async function DonorResults({ filters, page, pageSize }: { filters: Filters; page: number; pageSize: number }) {
@@ -40,7 +41,8 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
         phone_secondary,
         share_contact,
         tags,
-        about
+        about,
+        institute
       `,
         includeCount ? { count: 'exact' } : undefined,
       )
@@ -62,12 +64,18 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
     } else {
       query = query.not('availability', 'eq', 'not_available');
     }
+    if (filters.institute) {
+      query = query.eq('institute', filters.institute);
+    }
     if (filters.query) {
       query = query.textSearch('searchable_text', filters.query, {
         type: 'websearch',
         config: 'simple',
       });
     }
+
+    // Only show approved donors in public list
+    query = query.eq('approved', true);
 
     return query;
   };

@@ -64,6 +64,10 @@ export type Database = {
           about: string | null;
           tags: string[] | null;
           share_contact: boolean;
+          institute: string | null;
+          approved: boolean;
+          approved_at: string | null;
+          approved_by: string | null;
           created_at: string;
           updated_at: string;
           searchable_text: unknown;
@@ -92,6 +96,10 @@ export type Database = {
           about?: string | null;
           tags?: string[] | null;
           share_contact?: boolean;
+          institute?: string | null;
+          approved?: boolean;
+          approved_at?: string | null;
+          approved_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -363,6 +371,26 @@ export type Database = {
           is_active?: boolean;
         };
         Update: Partial<Database['public']['Tables']['area_lookup']['Row']>;
+        Relationships: [];
+      };
+      institute_lookup: {
+        Row: {
+          id: number;
+          name: string;
+          name_en: string | null;
+          type: string | null;
+          district: string | null;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: number;
+          name: string;
+          name_en?: string | null;
+          type?: string | null;
+          district?: string | null;
+          is_active?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['institute_lookup']['Row']>;
         Relationships: [];
       };
     };

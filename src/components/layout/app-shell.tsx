@@ -24,7 +24,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [user?.email, adminEmails]);
 
   type NavHref = Route | { pathname: Route; hash?: string };
-  type NavItem = { href: NavHref; label: string };
+  type NavItem = { 
+    href?: NavHref; 
+    label: string; 
+    submenu?: { href: NavHref; label: string }[];
+  };
 
   const navItems = useMemo<NavItem[]>(
     () => [
@@ -34,8 +38,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { href: { pathname: '/' as Route, hash: 'links' }, label: 'সোশ্যাল লিঙ্ক' },
       ...(isAdmin
         ? [
-            { href: '/dashboard/admin/donors' as Route, label: 'ডোনার অ্যাডমিন' },
-            { href: '/dashboard/admin/stories' as Route, label: 'স্টোরি অ্যাডমিন' },
+            { 
+              label: 'অ্যাডমিন', 
+              submenu: [
+                { href: '/dashboard/admin/donors' as Route, label: 'ডোনার ম্যানেজমেন্ট' },
+                { href: '/dashboard/admin/stories' as Route, label: 'স্টোরি ম্যানেজমেন্ট' },
+                { href: '/dashboard/admin/institutes' as Route, label: 'ইনস্টিটিউট ম্যানেজমেন্ট' },
+              ]
+            },
           ]
         : []),
     ],
@@ -61,11 +71,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="hidden gap-6 text-sm font-medium text-slate-600 md:flex">
             {navItems.map((item) => {
-              const key = typeof item.href === 'string' ? item.href : `${item.href.pathname}#${item.href.hash ?? ''}`;
+              // For items with submenu
+              if (item.submenu) {
+                return (
+                  <div key={item.label} className="group relative">
+                    <button className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600">
+                      {item.label}
+                      <svg className="ml-1 inline-block h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {/* Dropdown menu */}
+                    <div className="invisible absolute left-0 top-full mt-2 w-56 rounded-2xl border border-slate-200 bg-white py-2 shadow-lg opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                      {item.submenu.map((subItem) => (
+                        <Link
+                          key={typeof subItem.href === 'string' ? subItem.href : `${subItem.href.pathname}#${subItem.href.hash ?? ''}`}
+                          href={subItem.href}
+                          className="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-primary-50 hover:text-primary-600"
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Regular items without submenu
+              const key = typeof item.href === 'string' ? item.href : `${item.href!.pathname}#${item.href!.hash ?? ''}`;
               return (
                 <Link
                   key={key}
-                  href={item.href}
+                  href={item.href!}
                   className={cn(
                     'rounded-full px-4 py-2 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600',
                   )}

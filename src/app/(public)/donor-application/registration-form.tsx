@@ -16,6 +16,7 @@ const formSchema = z.object({
   email: z.string().email('বৈধ ইমেল লিখুন').optional().or(z.literal('')),
   district: z.string().min(2, 'জেলার নাম লিখুন'),
   area: z.string().min(2, 'এলাকার নাম লিখুন'),
+  institute: z.string().max(200, '২০০ অক্ষরের বেশি লেখা যাবে না').optional().or(z.literal('')),
   emergency_ready: z.boolean().optional(),
   about: z.string().max(400, '৪০০ অক্ষরের বেশি লেখা যাবে না').optional(),
   last_donation_at: z
@@ -37,11 +38,18 @@ type FormSchema = z.infer<typeof formSchema>;
 
 type Props = {
   areaOptions: Record<string, string[]>;
+  institutes: Array<{
+    id: number;
+    name: string;
+    name_en: string | null;
+    type: string | null;
+    district: string | null;
+  }>;
 };
 
 const bloodGroups: FormSchema['blood_group'][] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-export function DonorRegistrationForm({ areaOptions }: Props) {
+export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
   const [isPending, startTransition] = useTransition();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
@@ -217,6 +225,34 @@ export function DonorRegistrationForm({ areaOptions }: Props) {
           ) : null}
           <FormError error={errors.area?.message || serverErrors.area?.[0]} />
         </div>
+      </div>
+
+      <div className="grid gap-2 text-sm">
+        <label className="font-semibold text-slate-700" htmlFor="institute">
+          শিক্ষা প্রতিষ্ঠান (ঐচ্ছিক)
+        </label>
+        <input
+          id="institute"
+          type="text"
+          list="institutes-list"
+          {...register('institute')}
+          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+          placeholder="টাইপ করুন বা তালিকা থেকে নির্বাচন করুন"
+        />
+        <datalist id="institutes-list">
+          {institutes.map((institute) => (
+            <option 
+              key={institute.id} 
+              value={institute.name}
+            >
+              {institute.name_en ? `${institute.name_en} (${institute.name})` : institute.name}
+            </option>
+          ))}
+        </datalist>
+        <p className="text-xs text-slate-500">
+          টাইপ করতে থাকুন এবং suggestions দেখুন
+        </p>
+        <FormError error={errors.institute?.message || serverErrors.institute?.[0]} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
