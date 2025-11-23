@@ -66,7 +66,11 @@ export function DonorAdminTable({
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     router.push(buildUrl(p => {
-      searchValue.trim() ? p.set('q', searchValue.trim()) : p.delete('q');
+      if (searchValue.trim()) {
+        p.set('q', searchValue.trim());
+      } else {
+        p.delete('q');
+      }
       p.set('page', '1');
     }));
   };

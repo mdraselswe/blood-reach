@@ -109,6 +109,7 @@ export function DonorRegistrationForm({ areaOptions, institutes }: Props) {
     }
   }, [selectedDistrict, selectedArea, areas, setValue]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onInvalid = (errors: any) => {
     console.error('Form validation errors:', errors);
     const errorFields = Object.keys(errors).map(key => {
