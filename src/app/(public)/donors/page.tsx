@@ -158,6 +158,7 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
   };
 
   const gender = getSingle('gender');
+  const eligibility = getSingle('eligibility');
 
   return {
     query: q?.slice(0, 80),
@@ -172,6 +173,10 @@ function parseSearchParams(searchParams: Record<string, string | string[] | unde
     department: department?.slice(0, 100),
     batch: batch?.slice(0, 50),
     gender: gender?.slice(0, 20),
+    eligibility:
+      eligibility === 'eligible' || eligibility === 'ineligible' || eligibility === 'all'
+        ? eligibility
+        : 'eligible', // Default to eligible
   } as const;
 }
 

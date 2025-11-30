@@ -15,6 +15,7 @@ type Filters = {
   department?: string;
   batch?: string;
   gender?: string;
+  eligibility?: 'eligible' | 'ineligible' | 'all';
 };
 
 export async function DonorResults({ filters, page, pageSize }: { filters: Filters; page: number; pageSize: number }) {
@@ -92,6 +93,26 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
 
     // Only show approved donors in public list
     query = query.eq('approved', true);
+
+    // Filter by eligibility (4 months rule)
+    // Eligible: last_donation_at is null OR last_donation_at is more than 120 days ago
+    // Ineligible: last_donation_at exists AND is less than 120 days ago
+    const eligibilityFilter = filters.eligibility ?? 'eligible'; // Default to eligible
+    if (eligibilityFilter !== 'all') {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 120); // 4 months ago
+      const cutoffDateStr = cutoffDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      if (eligibilityFilter === 'eligible') {
+        // Eligible: last_donation_at is null OR last_donation_at <= cutoffDate
+        query = query.or(`last_donation_at.is.null,last_donation_at.lte.${cutoffDateStr}`);
+      } else if (eligibilityFilter === 'ineligible') {
+        // Ineligible: last_donation_at is not null AND last_donation_at > cutoffDate
+        query = query
+          .not('last_donation_at', 'is', null)
+          .gt('last_donation_at', cutoffDateStr);
+      }
+    }
 
     return query;
   };

@@ -8,13 +8,13 @@ const availabilityBadgeMeta: Record<
   Database['public']['Enums']['availability_status'],
   { label: string; icon: string; tone: string }
 > = {
-  available: { label: 'উপলভ্য', icon: '🟢', tone: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+  available: { label: 'এখন Available', icon: '🟢', tone: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
   temporarily_unavailable: {
-    label: 'শীঘ্রই উপলভ্য',
+    label: 'শীঘ্রই Available',
     icon: '⏳',
     tone: 'bg-amber-100 text-amber-700 border border-amber-200',
   },
-  not_available: { label: 'অনুপলভ্য', icon: '🚫', tone: 'bg-slate-200 text-slate-600 border border-slate-300' },
+  not_available: { label: 'Available নেই', icon: '🚫', tone: 'bg-slate-200 text-slate-600 border border-slate-300' },
 };
 
 type Donor = Pick<Database['public']['Tables']['donors']['Row'],
@@ -69,6 +69,16 @@ export function DonorCard({ donor }: { donor: Donor }) {
     if (diff < 30) return `${Math.round(diff / 7)} সপ্তাহ আগে`;
     if (diff < 365) return `${Math.round(diff / 30)} মাস আগে`;
     return `${Math.round(diff / 365)} বছর আগে`;
+  }, [donor.last_donation_at]);
+
+  // Check if donor is eligible (hasn't donated in last 4 months = 120 days)
+  const isEligible = useMemo(() => {
+    if (!donor.last_donation_at) return true; // No donation record means eligible
+    const lastDate = new Date(donor.last_donation_at);
+    if (Number.isNaN(lastDate.getTime())) return true;
+    const today = new Date();
+    const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 120; // 4 months = ~120 days
   }, [donor.last_donation_at]);
 
   const responseRate = useMemo(() => {
@@ -144,10 +154,20 @@ export function DonorCard({ donor }: { donor: Donor }) {
   const telLink = donor.share_contact && dialLink ? `tel:${dialLink}` : undefined;
 
   return (
-    <article className="relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-3xl border border-white bg-white p-6 shadow-sm transition hover:-translate-y-[2px] hover:shadow-lg">
+    <article className={cn(
+      "relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-3xl border p-6 shadow-sm transition hover:-translate-y-[2px] hover:shadow-lg",
+      isEligible 
+        ? "border-white bg-white" 
+        : "border-amber-300 bg-amber-50/50"
+    )}>
       {donor.verified ? (
         <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-1 rounded-bl-3xl bg-emerald-500 px-4 py-1 text-xs font-semibold text-white shadow-sm">
           <span className="text-sm">★</span> ভেরিফায়েড
+        </div>
+      ) : null}
+      {!isEligible ? (
+        <div className="pointer-events-none absolute left-0 top-0 flex items-center gap-1 rounded-br-3xl bg-amber-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm">
+          ⏸️ ৪ মাস অপেক্ষা
         </div>
       ) : null}
       
@@ -184,9 +204,14 @@ export function DonorCard({ donor }: { donor: Donor }) {
                 <span>{availabilityBadgeMeta[donor.availability].icon}</span>
                 {availabilityBadgeMeta[donor.availability].label}
               </span>
+              {!isEligible ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-300">
+                  ⏸️ এখন দান করতে পারবেন না
+                </span>
+              ) : null}
               {donor.emergency_ready ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                  ⚡ জরুরি প্রস্তুত
+                  ⚡ Emergency Ready
                 </span>
               ) : null}
             </div>

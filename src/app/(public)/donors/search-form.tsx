@@ -16,6 +16,7 @@ type Filters = {
   batch?: string;
   gender?: string;
   query?: string;
+  eligibility?: string;
 };
 
 type AreaLookup = Record<string, string[]>;
@@ -129,7 +130,7 @@ export function DonorSearchForm({
         <p className="text-xs text-slate-400">এন্টার চাপুন সার্চ করতে</p>
       </label>
       <div className="grid gap-3 text-sm font-medium text-slate-600">
-          <span>ইনস্টিটিউট</span>
+          <span>College/University</span>
           <input
             type="text"
             list="institutes-filter-list"
@@ -142,7 +143,7 @@ export function DonorSearchForm({
               }
             }}
             className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            placeholder="ইনস্টিটিউট টাইপ করুন বা নির্বাচন করুন"
+            placeholder="College/University name type করুন"
           />
         <datalist id="institutes-filter-list">
           {institutes.map((inst) => (
@@ -231,11 +232,11 @@ export function DonorSearchForm({
         </div>
       </div>
       <div className="grid gap-3 text-sm font-medium text-slate-600">
-        <span>উপলভ্যতা</span>
+        <span>Availability</span>
         <div className="flex flex-wrap gap-2">
           {[
-            { label: 'তৎক্ষণাৎ প্রাপ্য', value: 'available' },
-            { label: 'অল্প সময় পর প্রাপ্য', value: 'temporarily_unavailable' },
+            { label: 'এখন Available', value: 'available' },
+            { label: 'শীঘ্রই Available', value: 'temporarily_unavailable' },
           ].map((option) => (
             <button
               key={option.value}
@@ -249,6 +250,35 @@ export function DonorSearchForm({
               className={cn(
                 'rounded-full border px-4 py-2 text-xs font-semibold transition',
                 filters.availability === option.value
+                  ? 'border-primary bg-primary text-white shadow-soft'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-primary hover:bg-primary-50 hover:text-primary-600',
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-3 text-sm font-medium text-slate-600">
+        <span>এখন Donate করতে পারবেন?</span>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'হ্যাঁ', value: 'eligible' },
+            { label: 'না (৪ মাস Wait)', value: 'ineligible' },
+            { label: 'সব', value: 'all' },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() =>
+                updateQueryParam(
+                  'eligibility',
+                  filters.eligibility === option.value ? undefined : option.value,
+                )
+              }
+              className={cn(
+                'rounded-full border px-4 py-2 text-xs font-semibold transition',
+                (filters.eligibility === option.value || (!filters.eligibility && option.value === 'eligible'))
                   ? 'border-primary bg-primary text-white shadow-soft'
                   : 'border-slate-200 bg-white text-slate-600 hover:border-primary hover:bg-primary-50 hover:text-primary-600',
               )}
