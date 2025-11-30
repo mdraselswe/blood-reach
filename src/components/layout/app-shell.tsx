@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { Route } from 'next';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,20 @@ import Image from 'next/image';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [hash, setHash] = useState<string>('');
   const { user, loading, signOut } = useAuth();
+
+  // Track hash changes for active state
+  useEffect(() => {
+    const updateHash = () => {
+      setHash(window.location.hash.slice(1)); // Remove the # symbol
+    };
+    
+    updateHash(); // Initial hash
+    window.addEventListener('hashchange', updateHash);
+    return () => window.removeEventListener('hashchange', updateHash);
+  }, []);
   const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
     .split(',')
     .map((item) => item.trim().toLowerCase())
@@ -66,7 +79,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-soft">
               B
             </span> */}
-            <Image src="/BloodReach-Logo.png" alt="BloodReach" width={80} height={32} />
+            <Image 
+              src="/BloodReach-Logo.png" 
+              alt="BloodReach" 
+              width={80} 
+              height={32} 
+              priority
+              style={{ width: 'auto', height: 'auto' }}
+            />
             {/* <span className="text-base sm:text-lg">BloodReach</span> */}
           </Link>
           <nav className="hidden gap-6 text-sm font-medium text-slate-600 md:flex">
@@ -83,15 +103,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </button>
                     {/* Dropdown menu */}
                     <div className="invisible absolute left-0 top-full mt-2 w-56 rounded-2xl border border-slate-200 bg-white py-2 shadow-lg opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
-                      {item.submenu.map((subItem) => (
-                        <Link
-                          key={typeof subItem.href === 'string' ? subItem.href : `${subItem.href.pathname}#${subItem.href.hash ?? ''}`}
-                          href={subItem.href}
-                          className="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-primary-50 hover:text-primary-600"
-                        >
-                          {subItem.label}
-                        </Link>
-                      ))}
+                      {item.submenu.map((subItem) => {
+                        const subHref = typeof subItem.href === 'string' ? subItem.href : subItem.href.pathname;
+                        const isSubActive = pathname === subHref;
+                        return (
+                          <Link
+                            key={typeof subItem.href === 'string' ? subItem.href : `${subItem.href.pathname}#${subItem.href.hash ?? ''}`}
+                            href={subItem.href}
+                            className={cn(
+                              'block px-4 py-2.5 text-sm transition',
+                              isSubActive
+                                ? 'bg-primary-50 text-primary-600 font-semibold'
+                                : 'text-slate-700 hover:bg-primary-50 hover:text-primary-600',
+                            )}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -99,12 +128,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               
               // Regular items without submenu
               const key = typeof item.href === 'string' ? item.href : `${item.href!.pathname}#${item.href!.hash ?? ''}`;
+              const href = item.href!;
+              const hrefPath = typeof href === 'string' ? href : href.pathname;
+              const hrefHash = typeof href === 'string' ? undefined : href.hash;
+              
+              // Check if active: pathname matches AND (no hash needed OR hash matches)
+              const isActive = pathname === hrefPath && (
+                !hrefHash || hash === hrefHash || (pathname === '/' && hash === hrefHash)
+              );
+              
               return (
                 <Link
                   key={key}
-                  href={item.href!}
+                  href={href}
                   className={cn(
-                    'rounded-full px-4 py-2 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600',
+                    'rounded-full px-4 py-2 transition-all duration-200',
+                    isActive
+                      ? 'bg-primary text-white font-semibold shadow-sm'
+                      : 'text-slate-600 hover:bg-primary-50 hover:text-primary-600',
                   )}
                 >
                   {item.label}

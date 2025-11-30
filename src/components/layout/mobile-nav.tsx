@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { Route } from 'next';
 import { cn } from '@/lib/utils';
 
@@ -26,8 +27,21 @@ export function MobileNav({
   loading: boolean;
   isAdmin?: boolean;
 }) {
+  const pathname = usePathname();
+  const [hash, setHash] = useState<string>('');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Track hash changes for active state
+  useEffect(() => {
+    const updateHash = () => {
+      setHash(window.location.hash.slice(1)); // Remove the # symbol
+    };
+    
+    updateHash(); // Initial hash
+    window.addEventListener('hashchange', updateHash);
+    return () => window.removeEventListener('hashchange', updateHash);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -83,12 +97,25 @@ export function MobileNav({
         <nav className="flex flex-col gap-3 text-sm font-semibold text-slate-700">
           {flattenedItems.map((item) => {
             const key = typeof item.href === 'string' ? item.href : `${item.href.pathname}#${item.href.hash ?? ''}`;
+            const hrefPath = typeof item.href === 'string' ? item.href : item.href.pathname;
+            const hrefHash = typeof item.href === 'string' ? undefined : item.href.hash;
+            
+            // Check if active: pathname matches AND (no hash needed OR hash matches)
+            const isActive = pathname === hrefPath && (
+              !hrefHash || hash === hrefHash || (pathname === '/' && hash === hrefHash)
+            );
+            
             return (
               <Link
                 key={key}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-full bg-slate-100 px-4 py-3 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                className={cn(
+                  'rounded-full px-4 py-3 transition-colors',
+                  isActive
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-slate-100 hover:bg-primary-50 hover:text-primary-600',
+                )}
               >
                 {item.label}
               </Link>
