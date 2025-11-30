@@ -44,17 +44,14 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadDonorProfile = async () => {
       if (!user || !session) {
-        console.log('No user or session, skipping profile load');
         return;
       }
       setIsFetching(true);
 
       const supabase = supabaseBrowserClient();
       
-      console.log('Loading donor profile for user:', { userId: user.id, email: user.email });
-      
       // First try to find by user_id
-      let { data, error } = await supabase
+      const { data: initialData, error: initialError } = await supabase
         .from('donors')
         .select(
           'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about, institute, department, batch, verified, availability',
@@ -62,18 +59,17 @@ export default function DashboardPage() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('Query by user_id result:', { hasData: !!data, error: error?.message, errorCode: error?.code });
+      let data = initialData;
+      const error = initialError;
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load donor profile', error);
+        // Error handled below
       }
 
       // If not found by user_id, try to find by email or phone and link it
       if (!data) {
-        console.log('Profile not found by user_id, trying email/phone matching...');
         // Try email-based matching first
         if (user.email) {
-          console.log('Searching by email:', user.email);
           const emailMatch = await supabase
             .from('donors')
             .select(
@@ -84,40 +80,19 @@ export default function DashboardPage() {
             .limit(1)
             .maybeSingle();
 
-          console.log('Email match result:', { 
-            hasData: !!emailMatch.data, 
-            error: emailMatch.error?.message,
-            candidateUserId: emailMatch.data?.user_id,
-            candidateEmail: emailMatch.data?.email 
-          });
-
           if (!emailMatch.error && emailMatch.data) {
             const candidate = emailMatch.data;
-            console.log('Email match candidate:', { 
-              id: candidate.id, 
-              name: candidate.display_name,
-              userId: candidate.user_id,
-              currentUserId: user.id 
-            });
             
             // If not linked to any user, link it to current user
             if (!candidate.user_id) {
-              console.log('Linking donor profile to user...');
               const linkResult = await supabase
                 .from('donors')
                 .update({ user_id: user.id })
                 .eq('id', candidate.id)
                 .is('user_id', null);
 
-              console.log('Link result:', { 
-                error: linkResult.error?.message, 
-                errorCode: linkResult.error?.code,
-                success: !linkResult.error 
-              });
-
               if (!linkResult.error) {
                 // Reload the profile
-                console.log('Reloading profile after linking...');
                 const reloadResult = await supabase
                   .from('donors')
                   .select(
@@ -126,18 +101,10 @@ export default function DashboardPage() {
                   .eq('user_id', user.id)
                   .maybeSingle();
 
-                console.log('Reload result:', { 
-                  hasData: !!reloadResult.data, 
-                  error: reloadResult.error?.message,
-                  errorCode: reloadResult.error?.code 
-                });
-
                 if (!reloadResult.error && reloadResult.data) {
                   data = reloadResult.data;
-                  console.log('Profile loaded successfully after linking');
                 } else {
                   // If reload fails, use the candidate data directly
-                  console.log('Reload failed, using candidate data directly');
                   data = {
                     id: candidate.id,
                     display_name: candidate.display_name,
@@ -158,7 +125,6 @@ export default function DashboardPage() {
                   };
                 }
               } else {
-                console.error('Failed to link donor profile:', linkResult.error);
                 // Even if linking fails, use the candidate data
                 data = {
                   id: candidate.id,
@@ -181,7 +147,6 @@ export default function DashboardPage() {
               }
             } else if (candidate.user_id === user.id) {
               // Already linked to this user, use the data
-              console.log('Donor already linked to this user, using data');
               data = {
                 id: candidate.id,
                 display_name: candidate.display_name,
@@ -200,26 +165,17 @@ export default function DashboardPage() {
                 verified: candidate.verified,
                 availability: candidate.availability,
               };
-            } else {
-              console.log('Donor linked to different user:', candidate.user_id);
             }
           }
         }
 
         // If still not found, try phone number from user profile
         if (!data) {
-          console.log('Trying phone number matching...');
           const profileResult = await supabase
             .from('profiles')
             .select('phone')
             .eq('id', user.id)
             .maybeSingle();
-
-          console.log('Profile phone result:', { 
-            hasPhone: !!profileResult.data?.phone, 
-            phone: profileResult.data?.phone,
-            error: profileResult.error?.message 
-          });
 
           if (!profileResult.error && profileResult.data?.phone) {
             const phoneMatch = await supabase
@@ -232,12 +188,6 @@ export default function DashboardPage() {
               .order('created_at', { ascending: false })
               .limit(1)
               .maybeSingle();
-
-            console.log('Phone match result:', { 
-              hasData: !!phoneMatch.data, 
-              error: phoneMatch.error?.message,
-              candidatePhone: phoneMatch.data?.phone_primary 
-            });
 
             if (!phoneMatch.error && phoneMatch.data) {
               const candidate = phoneMatch.data;
@@ -290,19 +240,7 @@ export default function DashboardPage() {
       }
 
       if (data) {
-        console.log('Donor profile found and set:', { id: data.id, name: data.display_name });
         setDonor(data as DonorProfile);
-      } else {
-        console.log('No donor profile found after all attempts');
-        // Try to find any donor with this email (for debugging)
-        if (user.email) {
-          const debugQuery = await supabase
-            .from('donors')
-            .select('id, display_name, email, user_id, phone_primary')
-            .ilike('email', user.email)
-            .limit(5);
-          console.log('Debug: All donors with this email:', debugQuery.data);
-        }
       }
 
       setIsFetching(false);
@@ -311,7 +249,7 @@ export default function DashboardPage() {
     if (user && session) {
       loadDonorProfile();
     }
-  }, [user?.id, session?.access_token]);
+  }, [user, session]);
 
   const lastDonationText = useMemo(() => {
     if (!donor?.last_donation_at) return 'তথ্য নেই';

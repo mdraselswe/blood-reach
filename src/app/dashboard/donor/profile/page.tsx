@@ -45,7 +45,6 @@ export default function DonorProfilePage() {
   useEffect(() => {
     const loadDonorProfile = async () => {
       if (!user || !session) return;
-      console.log('Loading donor profile in profile page...', { userId: user.id, email: user.email });
       setIsFetching(true);
       setFetchError(null);
       setLinkMessage(null);
@@ -53,7 +52,7 @@ export default function DonorProfilePage() {
       const supabase = supabaseBrowserClient();
       
       // First try to find by user_id
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('donors')
         .select(
           'id, display_name, blood_group, phone_primary, district, area, last_donation_at, donation_count, emergency_ready, share_contact, about, institute, department, batch',
@@ -61,17 +60,13 @@ export default function DonorProfilePage() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('Query by user_id result:', { hasData: !!data, error: error?.message });
-
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load donor profile', error);
         setFetchError('ডোনার প্রোফাইল লোড করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।');
         setIsFetching(false);
         return;
       }
 
       if (data) {
-        console.log('Profile found by user_id:', { id: data.id, name: data.display_name });
         setDonor(data as DonorProfile);
         setIsFetching(false);
         return;
@@ -79,8 +74,6 @@ export default function DonorProfilePage() {
 
       // If not found by user_id, try to find by email and link it
       if (!data && user.email) {
-        console.log('Profile not found by user_id, trying email matching...', { email: user.email });
-        
         // First, try to find donor by email (case-insensitive)
         const emailMatch = await supabase
           .from('donors')
@@ -92,24 +85,15 @@ export default function DonorProfilePage() {
           .limit(1)
           .maybeSingle();
 
-        console.log('Email match result:', { 
-          hasData: !!emailMatch.data, 
-          error: emailMatch.error?.message,
-          candidateUserId: emailMatch.data?.user_id 
-        });
-
         if (!emailMatch.error && emailMatch.data) {
           const candidate = emailMatch.data;
           
           // If not linked to any user, link it to current user using server action
           if (!candidate.user_id) {
-            console.log('Linking donor profile...', { donorId: candidate.id, userId: user.id });
             const linkResult = await linkDonorProfileToUser({
               accessToken: session.access_token,
               donorId: candidate.id,
             });
-
-            console.log('Link result:', linkResult);
 
             if (linkResult.success) {
               // Retry loading after linking
@@ -122,7 +106,6 @@ export default function DonorProfilePage() {
                 .maybeSingle();
 
               if (!retryResult.error && retryResult.data) {
-                console.log('Profile loaded after linking:', { id: retryResult.data.id });
                 setDonor(retryResult.data as DonorProfile);
                 if (linkResult.message) {
                   setLinkMessage(linkResult.message);
@@ -137,7 +120,6 @@ export default function DonorProfilePage() {
             }
           } else if (candidate.user_id === user.id) {
             // Already linked to this user, use the data
-            console.log('Profile already linked, using data');
             setDonor({
               id: candidate.id,
               display_name: candidate.display_name,
@@ -162,7 +144,6 @@ export default function DonorProfilePage() {
 
       // If still not found, try the server action as fallback
       if (!data) {
-        console.log('Trying server action for linking...');
         const result = await ensureDonorProfileForCurrentUser({
           accessToken: session.access_token,
         });
@@ -181,11 +162,9 @@ export default function DonorProfilePage() {
             .maybeSingle();
 
           if (!refetchError && refetched) {
-            console.log('Profile loaded after server action:', { id: refetched.id });
             setDonor(refetched as DonorProfile);
           } else {
             if (refetchError) {
-              console.error('Failed to reload donor profile after linking', refetchError);
               setFetchError('ডোনার প্রোফাইল লোড করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।');
             }
             setDonor(null);

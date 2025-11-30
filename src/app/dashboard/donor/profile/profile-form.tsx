@@ -65,8 +65,6 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
   const [selectedInstitute, setSelectedInstitute] = useState(donor.institute || '');
   const [instituteDetails, setInstituteDetails] = useState<{ departments: string[]; batches: string[] } | null>(null);
 
-  console.log('DonorProfileForm rendered', { donorId: donor.id, hasSession: !!session });
-
   // Fetch area options and institutes
   useEffect(() => {
     const fetchData = async () => {
@@ -143,13 +141,11 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('Form submitted!');
     setMessage(null);
     setErrorMessage(null);
     setFieldErrors({});
 
     startTransition(async () => {
-      console.log('Starting update transition...');
       const supabase = supabaseBrowserClient();
       const formData = new FormData(event.currentTarget);
 
@@ -166,28 +162,13 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       const department = formData.get('department')?.toString().trim() ?? '';
       const batch = formData.get('batch')?.toString().trim() ?? '';
 
-      console.log('Form data parsed:', {
-        phonePrimary,
-        bloodGroup,
-        district,
-        area,
-        lastDonationAtRaw,
-        donationCountRaw,
-        emergencyReady,
-        shareContact,
-        about: about.substring(0, 50),
-        institute: institute.substring(0, 50),
-        department,
-        batch,
-      });
-
       // Validation
       if (!phonePrimary || phonePrimary.length < 10) {
         setFieldErrors({ phone_primary: ['বৈধ ফোন নম্বর দিন (কমপক্ষে ১০ অক্ষর)'] });
         return;
       }
 
-      if (!bloodGroup || !bloodGroups.includes(bloodGroup as any)) {
+      if (!bloodGroup || !bloodGroups.includes(bloodGroup as Database['public']['Enums']['blood_group'])) {
         setFieldErrors({ blood_group: ['ব্লাড গ্রুপ নির্বাচন করুন'] });
         return;
       }
@@ -253,8 +234,6 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
         return;
       }
 
-      console.log('Starting update process...', { donorId: donor.id, userId: user.id, updates });
-
       // First, check if donor profile is linked to current user
       const { data: currentDonor, error: checkError } = await supabase
         .from('donors')
@@ -262,15 +241,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
         .eq('id', donor.id)
         .maybeSingle();
 
-      console.log('Current donor check:', { 
-        hasData: !!currentDonor, 
-        userId: currentDonor?.user_id, 
-        email: currentDonor?.email,
-        error: checkError?.message 
-      });
-
       if (checkError) {
-        console.error('Failed to check donor profile', checkError);
         setErrorMessage('প্রোফাইল যাচাই করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।');
         return;
       }
@@ -282,21 +253,12 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
 
       // If not linked, link it first using server action
       if (!currentDonor.user_id) {
-        console.log('Linking donor profile to user before update...', { 
-          donorId: donor.id, 
-          userId: user.id,
-          email: currentDonor.email 
-        });
-        
         const linkResult = await linkDonorProfileToUser({
           accessToken: session?.access_token,
           donorId: donor.id,
         });
 
-        console.log('Link result:', linkResult);
-
         if (!linkResult.success) {
-          console.error('Failed to link donor profile');
           setErrorMessage(linkResult.message || 'প্রোফাইল অ্যাকাউন্টের সাথে যুক্ত করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।');
           return;
         }
@@ -308,29 +270,16 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
           .eq('id', donor.id)
           .maybeSingle();
 
-        console.log('Link verification:', { 
-          hasData: !!verifyLink.data, 
-          userId: verifyLink.data?.user_id,
-          error: verifyLink.error?.message 
-        });
-
         if (verifyLink.error || !verifyLink.data || verifyLink.data.user_id !== user.id) {
-          console.error('Link verification failed');
           setErrorMessage('প্রোফাইল যুক্ত করা হয়েছে কিন্তু যাচাই করতে সমস্যা হয়েছে। অনুগ্রহ করে page refresh করুন।');
           return;
         }
       } else if (currentDonor.user_id !== user.id) {
-        console.error('User ID mismatch:', { 
-          currentUserId: currentDonor.user_id, 
-          expectedUserId: user.id 
-        });
         setErrorMessage('আপনার এই প্রোফাইল আপডেট করার অনুমতি নেই।');
         return;
       }
 
       // Update the profile - now user_id should be set
-      console.log('Attempting update...', { donorId: donor.id, userId: user.id, updates });
-      
       const { error, data: updatedData } = await supabase
         .from('donors')
         .update(updates)
@@ -339,23 +288,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
         .select()
         .single();
 
-      console.log('Update result:', { 
-        hasData: !!updatedData, 
-        error: error?.message, 
-        errorCode: error?.code,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-        updatedData: updatedData ? Object.keys(updatedData) : null
-      });
-
       if (error) {
-        console.error('Failed to update donor profile', error);
-        console.error('Error details:', { 
-          code: error.code, 
-          message: error.message, 
-          details: error.details,
-          hint: error.hint 
-        });
         
         if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
           setErrorMessage('প্রোফাইল পাওয়া যায়নি বা আপনার এই প্রোফাইল আপডেট করার অনুমতি নেই।');
@@ -368,7 +301,6 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
       }
 
       if (!updatedData) {
-        console.warn('Update succeeded but no data returned');
         // Even if no data returned, the update might have succeeded
         // Try to reload the profile to verify
         const verifyResult = await supabase
@@ -377,16 +309,7 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
           .eq('id', donor.id)
           .maybeSingle();
         
-        if (verifyResult.error) {
-          console.error('Failed to verify update', verifyResult.error);
-          setErrorMessage('প্রোফাইল আপডেট করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।');
-          return;
-        }
-        
-        if (verifyResult.data) {
-          console.log('Update verified, profile reloaded');
-          // Update succeeded, continue
-        } else {
+        if (verifyResult.error || !verifyResult.data) {
           setErrorMessage('প্রোফাইল আপডেট করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।');
           return;
         }
@@ -679,9 +602,6 @@ export function DonorProfileForm({ donor, onUpdated }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          onClick={() => {
-            console.log('Update button clicked!', { isPending, donorId: donor.id });
-          }}
           className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? 'আপডেট হচ্ছে…' : 'প্রোফাইল আপডেট করুন'}

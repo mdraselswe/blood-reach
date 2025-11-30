@@ -93,7 +93,6 @@ export async function ensureDonorProfileForCurrentUser({
     .maybeSingle();
 
   if (candidateError) {
-    console.error('Failed to lookup donor by email', candidateError);
     return {
       success: false,
       linked: false,
@@ -124,7 +123,6 @@ export async function ensureDonorProfileForCurrentUser({
     .is('user_id', null);
 
   if (updateError) {
-    console.error('Failed to link donor profile to user', updateError);
     return {
       success: false,
       linked: false,
@@ -176,7 +174,6 @@ export async function linkDonorProfileToUser({
     .maybeSingle();
 
   if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-    console.error('Failed to check profile', profileCheckError);
     return {
       success: false,
       message: 'প্রোফাইল যাচাই করতে সমস্যা হয়েছে।',
@@ -185,7 +182,6 @@ export async function linkDonorProfileToUser({
 
   // Create profile if it doesn't exist
   if (!existingProfile) {
-    console.log('Creating user profile...', { userId: user.id });
     const { error: createProfileError } = await admin
       .from('profiles')
       .insert({
@@ -194,13 +190,11 @@ export async function linkDonorProfileToUser({
       });
 
     if (createProfileError) {
-      console.error('Failed to create profile', createProfileError);
       return {
         success: false,
         message: 'প্রোফাইল তৈরি করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।',
       };
     }
-    console.log('User profile created successfully');
   }
 
   // Check if donor exists and is not linked to another user
@@ -211,7 +205,6 @@ export async function linkDonorProfileToUser({
     .maybeSingle();
 
   if (donorError) {
-    console.error('Failed to check donor', donorError);
     return {
       success: false,
       message: 'প্রোফাইল খুঁজে পাওয়া যায়নি।',
@@ -226,10 +219,6 @@ export async function linkDonorProfileToUser({
   }
 
   if (donor.user_id && donor.user_id !== user.id) {
-    console.error('Donor already linked to different user', { 
-      donorUserId: donor.user_id, 
-      currentUserId: user.id 
-    });
     return {
       success: false,
       message: 'এই প্রোফাইলটি অন্য অ্যাকাউন্টের সাথে যুক্ত রয়েছে।',
@@ -237,7 +226,6 @@ export async function linkDonorProfileToUser({
   }
 
   if (donor.user_id === user.id) {
-    console.log('Donor already linked to current user');
     return {
       success: true,
       message: 'প্রোফাইল ইতিমধ্যে যুক্ত রয়েছে।',
@@ -245,7 +233,6 @@ export async function linkDonorProfileToUser({
   }
 
   // Link the donor profile
-  console.log('Attempting to link donor profile', { donorId, userId: user.id });
   const { error: updateError, data: updateData } = await admin
     .from('donors')
     .update({ user_id: user.id })
@@ -254,16 +241,7 @@ export async function linkDonorProfileToUser({
     .select('id, user_id')
     .single();
 
-  console.log('Link update result:', { 
-    error: updateError?.message, 
-    errorCode: updateError?.code,
-    errorDetails: updateError?.details,
-    hasData: !!updateData,
-    updatedUserId: updateData?.user_id 
-  });
-
   if (updateError) {
-    console.error('Failed to link donor profile', updateError);
     return {
       success: false,
       message: `প্রোফাইল যুক্ত করতে সমস্যা হয়েছে: ${updateError.message || 'অজানা ত্রুটি'}`,
@@ -271,14 +249,12 @@ export async function linkDonorProfileToUser({
   }
 
   if (!updateData || updateData.user_id !== user.id) {
-    console.error('Link update did not set user_id correctly', { updateData });
     return {
       success: false,
       message: 'প্রোফাইল যুক্ত করা হয়েছে কিন্তু যাচাই করতে সমস্যা হয়েছে।',
     };
   }
 
-  console.log('Donor profile successfully linked');
   return {
     success: true,
     message: 'প্রোফাইল সফলভাবে যুক্ত করা হয়েছে।',
