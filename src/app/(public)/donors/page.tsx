@@ -203,21 +203,21 @@ export default async function DonorsPage({
   const { areaLookup, availableCount, institutes } = await fetchFilterData();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
-      <div className="flex flex-col gap-3 pb-10">
-        <Link href="/" className="text-sm font-semibold text-primary-600 hover:underline">
+    <div className="mx-auto w-full max-w-6xl overflow-x-hidden px-3 py-6 sm:px-4 sm:py-12 md:py-16">
+      <div className="flex flex-col gap-2 pb-6 sm:gap-3 sm:pb-8 md:pb-10">
+        <Link href="/" className="text-xs font-semibold text-primary-600 hover:underline sm:text-sm">
           ← হোমে ফিরে যান
         </Link>
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900">ডোনার ডিরেক্টরি</h1>
-          <p className="text-sm text-slate-600 sm:text-base">
+        <div className="space-y-1.5 sm:space-y-2">
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">ডোনার ডিরেক্টরি</h1>
+          <p className="text-xs text-slate-600 sm:text-sm md:text-base">
             বর্তমানে <span className="font-semibold text-primary-600">{availableCount}</span> জন ডোনার সক্রিয়। ফিল্টার করুন।
           </p>
         </div>
       </div>
-      <div className="grid gap-12 lg:grid-cols-[320px_1fr]">
+      <div className="grid w-full gap-6 lg:grid-cols-[320px_1fr] lg:gap-12">
         <DonorSearchForm filters={filters} areaLookup={areaLookup} institutes={institutes} />
-        <Suspense fallback={<p className="text-sm text-slate-500">ডোনার তালিকা লোড হচ্ছে…</p>}>
+        <Suspense fallback={<p className="text-xs text-slate-500 sm:text-sm">ডোনার তালিকা লোড হচ্ছে…</p>}>
           <DonorResults filters={filters} page={page} pageSize={pageSize} />
         </Suspense>
       </div>

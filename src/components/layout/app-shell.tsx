@@ -75,18 +75,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-surface">
       <header className="sticky top-0 z-50 w-full backdrop-blur border-b border-slate-100 bg-white/90">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold text-primary-600">
+          <Link href="/" className="flex h-full items-center gap-2 font-semibold text-primary-600">
             {/* <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-soft">
               B
             </span> */}
-            <Image 
-              src="/BloodReach-Logo.png" 
-              alt="BloodReach" 
-              width={80} 
-              height={32} 
-              priority
-              style={{ width: 'auto', height: 'auto' }}
-            />
+            <div className="relative h-12 w-auto max-h-full flex items-center">
+              <Image 
+                src="/BloodReach-Logo.png" 
+                alt="BloodReach" 
+                width={80} 
+                height={32} 
+                priority
+                className="h-full w-auto object-contain"
+                style={{ maxHeight: '48px' }}
+              />
+            </div>
             {/* <span className="text-base sm:text-lg">BloodReach</span> */}
           </Link>
           <nav className="hidden gap-6 text-sm font-medium text-slate-600 md:flex">

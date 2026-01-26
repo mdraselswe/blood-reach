@@ -151,13 +151,13 @@ export async function DonorResults({ filters, page, pageSize }: { filters: Filte
   const visibleEnd = totalCount === 0 ? 0 : Math.min(visibleStart + donors.length - 1, totalCount);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-100 bg-white/70 px-4 py-3 text-sm text-slate-600 shadow-sm">
-        <p className="text-sm text-slate-500 sm:text-base">
+    <div className="w-full min-w-0 space-y-4 sm:space-y-6">
+      <div className="w-full min-w-0 rounded-2xl border border-slate-100 bg-white/70 px-3 py-2 text-xs text-slate-600 shadow-sm sm:rounded-3xl sm:px-4 sm:py-3 sm:text-sm">
+        <p className="min-w-0 break-words text-xs text-slate-500 sm:text-sm md:text-base">
           মোট {totalCount} জন ডোনার পাওয়া গেছে
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2 sm:gap-4">
         {donors.map((donor) => (
           <DonorCard key={donor.id} donor={donor} />
         ))}

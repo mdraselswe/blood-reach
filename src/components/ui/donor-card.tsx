@@ -155,36 +155,36 @@ export function DonorCard({ donor }: { donor: Donor }) {
 
   return (
     <article className={cn(
-      "relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-3xl border p-6 shadow-sm transition hover:-translate-y-[2px] hover:shadow-lg",
+      "relative flex h-full w-full min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border p-4 shadow-sm transition hover:-translate-y-[2px] hover:shadow-lg sm:rounded-3xl sm:gap-4 sm:p-6",
       isEligible 
         ? "border-white bg-white" 
         : "border-amber-300 bg-amber-50/50"
     )}>
       {donor.verified ? (
-        <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-1 rounded-bl-3xl bg-emerald-500 px-4 py-1 text-xs font-semibold text-white shadow-sm">
-          <span className="text-sm">★</span> ভেরিফায়েড
+        <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-0.5 rounded-bl-2xl bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm sm:gap-1 sm:rounded-bl-3xl sm:px-4 sm:py-1 sm:text-xs">
+          <span className="text-xs sm:text-sm">★</span> <span className="hidden sm:inline">ভেরিফায়েড</span>
         </div>
       ) : null}
       {!isEligible ? (
-        <div className="pointer-events-none absolute left-0 top-0 flex items-center gap-1 rounded-br-3xl bg-amber-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm">
-          ⏸️ ৪ মাস অপেক্ষা
+        <div className="pointer-events-none absolute left-0 top-0 flex items-center gap-0.5 rounded-br-2xl bg-amber-500 px-2 py-0.5 text-[9px] font-semibold text-white shadow-sm sm:gap-1 sm:rounded-br-3xl sm:px-3 sm:py-1 sm:text-[10px]">
+          ⏸️ <span className="hidden sm:inline">৪ মাস অপেক্ষা</span>
         </div>
       ) : null}
       
-      <header className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-primary text-lg font-bold text-white shadow-soft">
+      <header className="flex min-w-0 items-start justify-between gap-2 sm:gap-4">
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-base font-bold text-white shadow-soft sm:h-14 sm:w-14 sm:rounded-3xl sm:text-lg">
             {donor.blood_group}
           </div>
-          <div className="flex min-w-0 flex-col gap-1">
-            <h3 className="text-lg font-semibold leading-tight text-slate-900">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1">
+            <h3 className="min-w-0 break-words text-base font-semibold leading-tight text-slate-900 sm:text-lg">
               {donor.display_name}
             </h3>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-              <span>{locationLabel}</span>
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-500 sm:gap-2 sm:text-xs">
+              <span className="min-w-0 break-words">{locationLabel}</span>
               {donor.gender || age ? (
                 <>
-                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  <span className="h-0.5 w-0.5 rounded-full bg-slate-300 sm:h-1 sm:w-1" />
                   <span>
                     {[
                       donor.gender === 'Male' ? 'পুরুষ' : donor.gender === 'Female' ? 'মহিলা' : donor.gender,
@@ -194,44 +194,44 @@ export function DonorCard({ donor }: { donor: Donor }) {
                 </>
               ) : null}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 sm:mt-1 sm:gap-2">
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
+                  'inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:gap-1 sm:px-2.5 sm:text-[11px]',
                   availabilityBadgeMeta[donor.availability].tone,
                 )}
               >
                 <span>{availabilityBadgeMeta[donor.availability].icon}</span>
-                {availabilityBadgeMeta[donor.availability].label}
+                <span className="whitespace-nowrap">{availabilityBadgeMeta[donor.availability].label}</span>
               </span>
               {!isEligible ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-300">
-                  ⏸️ এখন দান করতে পারবেন না
+                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-300 sm:gap-1 sm:px-2.5 sm:text-[11px]">
+                  ⏸️ <span className="hidden sm:inline">এখন দান করতে পারবেন না</span>
                 </span>
               ) : null}
               {donor.emergency_ready ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                  ⚡ Emergency Ready
+                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 sm:gap-1 sm:px-2 sm:text-[11px]">
+                  ⚡ <span className="hidden sm:inline">Emergency Ready</span>
                 </span>
               ) : null}
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 text-right">
+        <div className="flex flex-col items-end gap-0.5 text-right sm:gap-1">
           {responseRate ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-600">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600 sm:gap-1 sm:px-3 sm:text-[11px]">
               {responseRate}
             </span>
           ) : null}
         </div>
       </header>
 
-      <div className="grid gap-3 text-sm text-slate-600">
+      <div className="grid min-w-0 gap-2 text-xs text-slate-600 sm:gap-3 sm:text-sm">
         {(donor.institute || donor.department || donor.batch) ? (
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-xs">
-            {donor.institute && <p className="font-semibold text-slate-700">{donor.institute}</p>}
+          <div className="min-w-0 rounded-xl bg-slate-50 px-3 py-2 text-[10px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-xs">
+            {donor.institute && <p className="min-w-0 break-words font-semibold text-slate-700">{donor.institute}</p>}
             {(donor.department || donor.batch) && (
-              <p className={cn("text-slate-500", donor.institute && "mt-0.5")}>
+              <p className={cn("min-w-0 break-words text-slate-500", donor.institute && "mt-0.5")}>
                 {[donor.department, donor.batch ? `ব্যাচ ${donor.batch}` : null]
                   .filter(Boolean)
                   .join(' • ')}
@@ -240,35 +240,35 @@ export function DonorCard({ donor }: { donor: Donor }) {
           </div>
         ) : null}
 
-        <div className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/40 p-4">
-          <dl className="grid gap-3 text-xs text-slate-500 sm:grid-cols-3">
-            <div className="space-y-1">
+        <div className="grid min-w-0 gap-2 rounded-xl border border-slate-100 bg-slate-50/40 p-3 sm:gap-3 sm:rounded-2xl sm:p-4">
+          <dl className="grid min-w-0 gap-2 text-[10px] text-slate-500 sm:grid-cols-3 sm:gap-3 sm:text-xs">
+            <div className="space-y-0.5 sm:space-y-1">
               <dt className="font-semibold text-slate-600">সর্বশেষ দান</dt>
-              <dd className="text-sm text-slate-900">{lastDonation}</dd>
+              <dd className="text-xs text-slate-900 sm:text-sm">{lastDonation}</dd>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5 sm:space-y-1">
               <dt className="font-semibold text-slate-600">মোট ডোনেশন</dt>
-              <dd className="text-sm text-slate-900">
+              <dd className="text-xs text-slate-900 sm:text-sm">
                 {donor.donation_count > 0 ? `${donor.donation_count} বার` : 'তথ্য নেই'}
               </dd>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5 sm:space-y-1">
               <dt className="font-semibold text-slate-600">যোগাযোগ</dt>
-              <dd className="text-sm text-slate-900">{donor.share_contact ? 'সরাসরি' : 'সীমিত'}</dd>
+              <dd className="text-xs text-slate-900 sm:text-sm">{donor.share_contact ? 'সরাসরি' : 'সীমিত'}</dd>
             </div>
           </dl>
           
           {donor.about ? (
-            <p className="rounded-2xl bg-white/90 p-3 text-sm text-slate-600">{donor.about}</p>
+            <p className="min-w-0 break-words rounded-xl bg-white/90 p-2 text-xs text-slate-600 sm:rounded-2xl sm:p-3 sm:text-sm">{donor.about}</p>
           ) : null}
           
           {donor.share_contact && formattedPrimaryPhone ? (
-            <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600">
-              <span className="text-sm font-semibold text-slate-900">{formattedPrimaryPhone}</span>
+            <div className="flex min-w-0 flex-col items-stretch gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs">
+              <span className="min-w-0 break-all text-xs font-semibold text-slate-900 sm:text-sm">{formattedPrimaryPhone}</span>
               <button
                 type="button"
                 onClick={handleCopyPhone}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-primary hover:text-primary-600"
+                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:border-primary hover:text-primary-600 sm:px-3 sm:text-xs"
               >
                 {phoneCopied ? 'কপি হয়েছে ✔️' : 'কপি করুন'}
               </button>
@@ -276,11 +276,11 @@ export function DonorCard({ donor }: { donor: Donor }) {
           ) : null}
           
           {donor.tags?.length ? (
-            <div className="flex flex-wrap gap-2 text-xs font-semibold text-primary-700">
+            <div className="flex min-w-0 flex-wrap gap-1.5 text-[10px] font-semibold text-primary-700 sm:gap-2 sm:text-xs">
               {donor.tags.slice(0, 4).map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center justify-center rounded-full bg-primary-50 px-3 py-1"
+                  className="shrink-0 inline-flex items-center justify-center rounded-full bg-primary-50 px-2 py-0.5 sm:px-3 sm:py-1"
                 >
                   #{tag}
                 </span>
@@ -290,25 +290,25 @@ export function DonorCard({ donor }: { donor: Donor }) {
         </div>
       </div>
 
-      <footer className="grid gap-2 text-sm">
+      <footer className="grid min-w-0 gap-1.5 text-xs sm:gap-2 sm:text-sm">
         {telLink || whatsappLink ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
             {telLink ? (
               <a
                 href={telLink}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-600"
+                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-soft hover:bg-primary-600 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 📞 কল করুন
               </a>
             ) : (
-              <span className="text-xs text-slate-400">ফোন নম্বর লগইন ছাড়া দেখা যাবে না।</span>
+              <span className="min-w-0 break-words text-[10px] text-slate-400 sm:text-xs">ফোন নম্বর লগইন ছাড়া দেখা যাবে না।</span>
             )}
             {whatsappLink ? (
               <a
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-100"
+                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-primary px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-100 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 💬 WhatsApp
               </a>
@@ -316,13 +316,13 @@ export function DonorCard({ donor }: { donor: Donor }) {
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-primary hover:text-primary-600"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-primary hover:text-primary-600 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
             >
               {shared ? 'শেয়ার হয়েছে ✔️' : copied ? 'কপি হয়েছে ✔️' : 'শেয়ার'}
             </button>
           </div>
         ) : (
-          <p className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-xs text-slate-500">
+          <p className="min-w-0 break-words rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-[10px] text-slate-500 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-xs">
             যোগাযোগ তথ্য প্রকাশ্য নয়। অনুগ্রহ করে সাপোর্ট টিমের সাথে যোগাযোগ করুন।
           </p>
         )}
